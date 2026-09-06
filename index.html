@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Attendance Tracker — Sharad Sourav</title>
+<meta name="author" content="Sharad Sourav" />
+<meta name="description" content="Personal attendance tracker built by Sharad Sourav for personal use." />
+<meta name="theme-color" content="#2A5C54" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon-192.png" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body, #app { margin: 0; padding: 0; min-height: 100%; background: #F5F6F4; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+  button { font-family: inherit; border: none; background: none; cursor: pointer; }
+  input { font-family: inherit; }
+  table { border-collapse: collapse; width: 100%; }
+  .sg { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 700; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+"use strict";
+
+/* ---------------- theme ---------------- */
+var THEME = {
+  bg: "#F5F6F4", card: "#FFFFFF", ink: "#1C2333", inkSoft: "#5B6472",
+  hairline: "#E2E4E0", primary: "#2A5C54", primarySoft: "#E4EFEC",
+  attended: "#2F8F5B", attendedSoft: "#E4F4EA",
+  absent: "#C1503D", absentSoft: "#FBE9E5",
+  notHeld: "#8A7B4F", notHeldSoft: "#F2EEE0",
+  holiday: "#6E5CA6", holidaySoft: "#EDE8F6",
+  pending: "#B7BCC4"
+};
+var DAY_COLOR = { 1: "#4F86B8", 2: "#C98A3E", 3: "#3F9B5E", 4: "#8A6BC1", 5: "#5B5B5B", 6: "#B14E6F" };
+var DAY_NAMES_LONG = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+/* ---------------- schedule ---------------- */
+var SCHEDULE = {
+  1: [["09:00","10:00","General Medicine"],["10:00","11:00","OBG"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Medicine"]],
+  2: [["09:00","10:00","General Medicine"],["10:00","11:00","General Surgery"],["11:00","14:00","Clinical Posting"],["15:00","17:00","OBG"]],
+  3: [["09:00","10:00","General Surgery"],["10:00","11:00","Pediatrics"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Surgery"]],
+  4: [["09:00","10:00","ENT"],["10:00","11:00","Psychiatry"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Resp. Medicine / Radiodiagnosis"],["16:00","17:00","Pediatrics / Anesthesia"]],
+  5: [["09:00","10:00","EYE"],["10:00","11:00","Dermatology"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Orthopedics / OBG"],["16:00","17:00","General Medicine"]],
+  6: [["09:00","10:00","OBG"],["10:00","11:00","Orthopedics"],["11:00","12:00","General Surgery"],["12:00","14:00","AETCOM / Pandemic Module"],["15:00","17:00","Monthly Assessment"]]
+};
+var START_DATE = new Date(2026, 8, 7);
+var END_DATE = new Date(2027, 8, 7);
+var ALL_SUBJECTS = (function () {
+  var seen = {}, list = [];
+  Object.keys(SCHEDULE).forEach(function (wd) {
+    SCHEDULE[wd].forEach(function (s) {
+      if (!seen[s[2]]) { seen[s[2]] = true; list.push(s[2]); }
+    });
+  });
+  return list;
+})();
+
+/* ---------------- date helpers ---------------- */
+function pad2(n) { return String(n).padStart(2, "0"); }
+function dkey(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function addDays(d, n) { var nd = new Date(d); nd.setDate(nd.getDate() + n); return nd; }
+function clampToRange(d) { if (d < START_DATE) return new Date(START_DATE); if (d > END_DATE) return new Date(END_DATE); return d; }
+function fmtTime(hhmm) {
+  var parts = hhmm.split(":"); var h = Number(parts[0]), m = Number(parts[1]);
+  var ap = h >= 12 ? "PM" : "AM"; var h12 = h % 12 === 0 ? 12 : h % 12;
+  return h12 + ":" + pad2(m) + " " + ap;
+}
+function fmtDateLong(d) { return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+function realToday() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
+function todayClamped() { return clampToRange(realToday()); }
+function startOfDay(d) { var nd = new Date(d); nd.setHours(0, 0, 0, 0); return nd; }
+var UNLOCK_HOUR = 6;
+function isNowPastUnlock() { return new Date().getHours() >= UNLOCK_HOUR; }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+var STATUS = { ATTENDED: "attended", ABSENT: "absent", NOT_HELD: "not_held" };
+var STORAGE_KEY = "attendance-tracker-data-v1";
+
+/* ---------------- tiny inline icons (plain SVG strings) ---------------- */
+function icon(inner, size, color, sw) {
+  size = size || 16; color = color || "currentColor"; sw = sw || 2;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color +
+    '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round" style="display:block">' + inner + '</svg>';
+}
+var ICONS = {
+  chevronLeft: function (size, color) { return icon('<polyline points="15 18 9 12 15 6"/>', size, color); },
+  chevronRight: function (size, color) { return icon('<polyline points="9 18 15 12 9 6"/>', size, color); },
+  check: function (size, color) { return icon('<polyline points="20 6 9 17 4 12"/>', size, color, 2.4); },
+  x: function (size, color) { return icon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', size, color, 2.4); },
+  ban: function (size, color) { return icon('<circle cx="12" cy="12" r="9"/><line x1="6" y1="18" x2="18" y2="6"/>', size, color, 2.4); },
+  lock: function (size, color) { return icon('<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', size, color); },
+  clock: function (size, color) { return icon('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>', size, color); },
+  clipboard: function (size, color, sw) { return icon('<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/>', size, color, sw); },
+  bar: function (size, color, sw) { return icon('<line x1="5" y1="21" x2="5" y2="10"/><line x1="12" y1="21" x2="12" y2="4"/><line x1="19" y1="21" x2="19" y2="14"/>', size, color, sw); },
+  reset: function (size, color) { return icon('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/>', size, color); },
+  party: function (size, color) { return icon('<path d="M5.8 11.3 2 22l10.7-3.8"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-4.6 4.6"/><path d="M18.4 8.4 22 12"/><path d="m9 12 3-3 3 3-3 3z"/>', size, color); }
+};
+
+/* ---------------- state ---------------- */
+var state = {
+  status: {},
+  holidays: {},
+  tab: "log",
+  viewDate: todayClamped(),
+  confirmReset: false,
+  knownToday: dkey(realToday())
+};
+
+function loadState() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      state.status = parsed.status || {};
+      state.holidays = parsed.holidays || {};
+    }
+  } catch (e) { /* first run */ }
+}
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ status: state.status, holidays: state.holidays }));
+  } catch (e) { /* storage unavailable */ }
+}
+
+function isDateEditable(dateKey) {
+  return dateKey === dkey(realToday()) && isNowPastUnlock();
+}
+function setSessionStatus(sKey, value) {
+  var dateKey = sKey.slice(0, 10);
+  if (!isDateEditable(dateKey)) return;
+  if (state.status[sKey] === value) delete state.status[sKey]; else state.status[sKey] = value;
+  persist(); render();
+}
+function toggleHoliday(dkeyStr) {
+  if (!isDateEditable(dkeyStr)) return;
+  if (state.holidays[dkeyStr]) delete state.holidays[dkeyStr]; else state.holidays[dkeyStr] = true;
+  persist(); render();
+}
+function resetAll() {
+  state.status = {}; state.holidays = {};
+  persist();
+  state.confirmReset = false;
+  render();
+}
+
+/* ---------------- stats ---------------- */
+function computeStats() {
+  var attended = 0, absent = 0, notHeld = 0, pending = 0, total = 0, holidayCount = 0;
+  var bySubject = {};
+  ALL_SUBJECTS.forEach(function (s) { bySubject[s] = { attended: 0, absent: 0, notHeld: 0, pending: 0, total: 0 }; });
+  var cursor = new Date(START_DATE);
+  var seen = {};
+  while (cursor <= END_DATE) {
+    var wd = cursor.getDay();
+    var key = dkey(cursor);
+    var sessions = SCHEDULE[wd] || [];
+    if (sessions.length) {
+      if (state.holidays[key]) {
+        if (!seen[key]) { holidayCount++; seen[key] = true; }
+      } else {
+        sessions.forEach(function (sess, idx) {
+          var subj = sess[2], sKey = key + "-" + idx, st = state.status[sKey];
+          total++; bySubject[subj].total++;
+          if (st === STATUS.ATTENDED) { attended++; bySubject[subj].attended++; }
+          else if (st === STATUS.ABSENT) { absent++; bySubject[subj].absent++; }
+          else if (st === STATUS.NOT_HELD) { notHeld++; bySubject[subj].notHeld++; }
+          else { pending++; bySubject[subj].pending++; }
+        });
+      }
+    }
+    cursor = addDays(cursor, 1);
+  }
+  var marked = attended + absent;
+  var percent = marked > 0 ? (attended / marked) * 100 : null;
+  var subjectRows = ALL_SUBJECTS.map(function (s) {
+    var d = bySubject[s]; var m = d.attended + d.absent;
+    return { subject: s, attended: d.attended, absent: d.absent, notHeld: d.notHeld, pending: d.pending, total: d.total, percent: m > 0 ? Math.round((d.attended / m) * 100) : null };
+  });
+  return { attended: attended, absent: absent, notHeld: notHeld, pending: pending, total: total, holidayCount: holidayCount, percent: percent, subjectRows: subjectRows };
+}
+
+/* ---------------- render: header / nav ---------------- */
+function renderHeader() {
+  return '' +
+    '<div style="padding:20px 16px 12px;background:' + THEME.bg + ';position:sticky;top:0;z-index:10">' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+        ICONS.clipboard(20, THEME.primary) +
+        '<h1 class="sg" style="font-size:18px;color:' + THEME.ink + ';margin:0">Attendance</h1>' +
+      '</div>' +
+      '<p style="font-size:12px;margin:2px 0 0;color:' + THEME.inkSoft + '">7 Sep 2026 – 7 Sep 2027 · 3rd Prof Part-II</p>' +
+      '<p style="font-size:10.5px;margin:3px 0 0;color:' + THEME.pending + '">Made by Sharad Sourav — for personal use</p>' +
+    '</div>';
+}
+function renderBottomNav() {
+  var items = [
+    { id: "log", label: "Log", i: ICONS.clipboard },
+    { id: "stats", label: "Stats", i: ICONS.bar }
+  ];
+  return '<div style="position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;border-top:1px solid ' + THEME.hairline + ';background:' + THEME.card + '">' +
+    items.map(function (it) {
+      var active = state.tab === it.id;
+      var color = active ? THEME.primary : THEME.inkSoft;
+      return '<button data-act="tab" data-tab="' + it.id + '" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 24px;font-size:12px;color:' + color + '">' +
+        it.i(20, color, active ? 2.4 : 1.8) + it.label + '</button>';
+    }).join("") +
+    '</div>';
+}
+
+/* ---------------- render: log tab ---------------- */
+function renderLogTab() {
+  var vd = state.viewDate;
+  var key = dkey(vd);
+  var wd = vd.getDay();
+  var sessions = SCHEDULE[wd] || [];
+  var isHoliday = !!state.holidays[key];
+  var outOfRange = vd < START_DATE || vd > END_DATE;
+  var accent = DAY_COLOR[wd] || THEME.inkSoft;
+  var today0 = realToday(), view0 = startOfDay(vd);
+  var isPast = view0 < today0, isFuture = view0 > today0;
+  var isToday = !isPast && !isFuture;
+  var beforeUnlock = isToday && !isNowPastUnlock();
+  var isEditable = isToday && !beforeUnlock && !outOfRange;
+
+  var html = '<div style="padding:0 16px">';
+
+  html += '<div style="border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:8px;margin-bottom:12px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
+    '<button data-act="prevday" style="padding:8px">' + ICONS.chevronLeft(18, THEME.ink) + '</button>' +
+    '<div style="display:flex;flex-direction:column;align-items:center">' +
+      '<span class="sg" style="font-size:14px;color:' + THEME.ink + '">' + DAY_NAMES_LONG[wd] + '</span>' +
+      '<span style="font-size:12px;color:' + THEME.inkSoft + '">' + fmtDateLong(vd) + '</span>' +
+    '</div>' +
+    '<button data-act="nextday" style="padding:8px">' + ICONS.chevronRight(18, THEME.ink) + '</button>' +
+  '</div>';
+
+  html += '<div style="display:flex;gap:8px;margin-bottom:12px">' +
+    '<input type="date" data-act="datepick" value="' + key + '" min="' + dkey(START_DATE) + '" max="' + dkey(END_DATE) + '" ' +
+      'style="font-size:12px;padding:7px 8px;border-radius:8px;flex:1;border:1px solid ' + THEME.hairline + ';color:' + THEME.ink + ';background:' + THEME.card + '" />' +
+    '<button data-act="goToday" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.primarySoft + ';color:' + THEME.primary + '">Today</button>' +
+  '</div>';
+
+  if (!outOfRange && sessions.length > 0) {
+    if (beforeUnlock) {
+      html += bannerHtml(ICONS.clock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "Today, but logging opens at 6:00 AM.");
+    } else if (isToday) {
+      html += bannerHtml(ICONS.clock(12, THEME.primary), THEME.primarySoft, THEME.primary, "Today — editable until midnight, then it locks in for good.");
+    } else if (isPast) {
+      html += bannerHtml(ICONS.lock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "This day has passed — entries are locked and can't be changed.");
+    } else {
+      html += bannerHtml(ICONS.lock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "This day hasn't happened yet — come back on the day to log it.");
+    }
+  }
+
+  if (outOfRange) {
+    html += '<p style="font-size:14px;text-align:center;padding:32px 0;color:' + THEME.inkSoft + '">Outside the tracked range (7 Sep 2026 – 7 Sep 2027).</p>';
+  } else if (sessions.length === 0) {
+    html += '<p style="font-size:14px;text-align:center;padding:32px 0;color:' + THEME.inkSoft + '">No classes scheduled — Sunday.</p>';
+  } else {
+    var holidayLabel = isHoliday
+      ? (isEditable ? "Marked as holiday — tap to unmark" : "Marked as holiday")
+      : (isEditable ? "Mark whole day as holiday" : "Not a holiday");
+    html += '<button data-act="' + (isEditable ? "toggleholiday" : "noop") + '" data-key="' + key + '" ' +
+      'style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 0;margin-bottom:12px;font-size:14px;font-weight:500;' +
+      'background:' + (isHoliday ? THEME.holiday : THEME.holidaySoft) + ';color:' + (isHoliday ? "#FFFFFF" : THEME.holiday) + ';' +
+      'opacity:' + (isEditable ? 1 : (isHoliday ? 1 : 0.6)) + '">' +
+      (isEditable ? ICONS.party(16) : ICONS.lock(13)) + holidayLabel + '</button>';
+
+    if (!isHoliday) {
+      sessions.forEach(function (sess, idx) {
+        var sKey = key + "-" + idx;
+        var cur = state.status[sKey];
+        html += '<div style="border-radius:10px;margin-bottom:8px;padding:10px 12px;background:' + THEME.card +
+          ';border:1px solid ' + THEME.hairline + ';border-left-width:3px;border-left-color:' + accent + ';border-left-style:solid;opacity:' + (isEditable ? 1 : 0.85) + '">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">' +
+            '<div><div style="font-size:14px;font-weight:500;color:' + THEME.ink + '">' + esc(sess[2]) + '</div>' +
+              '<div style="font-size:12px;color:' + THEME.inkSoft + '">' + fmtTime(sess[0]) + ' – ' + fmtTime(sess[1]) + '</div></div>';
+        if (!isEditable) {
+          var tag = isPast ? "Locked" : (beforeUnlock ? "Opens 6 AM" : "Not yet");
+          var tagIcon = isPast ? ICONS.lock(11, THEME.inkSoft) : ICONS.clock(11, THEME.inkSoft);
+          html += '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:' + THEME.inkSoft + '">' + tagIcon + tag + '</span>';
+        }
+        html += '</div>';
+        html += '<div style="display:flex;gap:6px">' +
+          statusBtnHtml(sKey, STATUS.ATTENDED, cur === STATUS.ATTENDED, isEditable, THEME.attended, THEME.attendedSoft, ICONS.check, "Attended") +
+          statusBtnHtml(sKey, STATUS.ABSENT, cur === STATUS.ABSENT, isEditable, THEME.absent, THEME.absentSoft, ICONS.x, "Absent") +
+          statusBtnHtml(sKey, STATUS.NOT_HELD, cur === STATUS.NOT_HELD, isEditable, THEME.notHeld, THEME.notHeldSoft, ICONS.ban, "Not held") +
+          '</div>';
+        if (!isEditable && !cur) {
+          var note = isPast ? "Left unmarked — permanently blank." : (beforeUnlock ? "Unlocks at 6:00 AM." : "Log this once the class happens.");
+          html += '<p style="font-size:10px;margin:6px 0 0;color:' + THEME.pending + '">' + note + '</p>';
+        }
+        html += '</div>';
+      });
+    } else {
+      html += '<p style="font-size:12px;text-align:center;padding:16px 0;color:' + THEME.inkSoft + '">Classes for this day are excluded from your attendance count.</p>';
+    }
+  }
+
+  html += '</div>';
+  return html;
+}
+function bannerHtml(iconSvg, bg, color, text) {
+  return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:12px;background:' + bg + ';color:' + color + '">' + iconSvg + text + '</div>';
+}
+function statusBtnHtml(sKey, value, active, editable, color, softColor, iconFn, label) {
+  var disabled = !editable;
+  var bg = active ? color : softColor;
+  var fg = active ? "#FFFFFF" : color;
+  var opacity = disabled && !active ? 0.5 : 1;
+  return '<button data-act="' + (disabled ? "noop" : "setstatus") + '" data-key="' + sKey + '" data-value="' + value + '" ' +
+    'style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;padding:7px 0;' +
+    'background:' + bg + ';color:' + fg + ';opacity:' + opacity + '">' +
+    iconFn(14, fg, 2.4) + '<span style="font-size:10px;font-weight:500;line-height:1">' + label + '</span></button>';
+}
+
+/* ---------------- render: stats tab ---------------- */
+function renderStatsTab() {
+  var stats = computeStats();
+  var chartRows = stats.subjectRows.filter(function (r) { return r.total > 0; });
+  var maxVal = 1;
+  chartRows.forEach(function (r) { var m = r.attended + r.absent; if (m > maxVal) maxVal = m; });
+
+  var html = '<div style="padding:0 16px">';
+
+  html += '<div style="border-radius:10px;padding:16px;margin-bottom:12px;text-align:center;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
+    '<div class="sg" style="font-size:36px;color:' + THEME.primary + '">' + (stats.percent === null ? "—" : stats.percent.toFixed(1) + "%") + '</div>' +
+    '<div style="font-size:12px;margin-top:4px;color:' + THEME.inkSoft + '">Overall attendance' +
+      (stats.percent !== null ? ' · ' + stats.attended + ' of ' + (stats.attended + stats.absent) + ' marked classes' : '') + '</div>' +
+  '</div>';
+
+  var boxes = [
+    ["Total sessions", stats.total, THEME.ink],
+    ["Attended", stats.attended, THEME.attended],
+    ["Absent", stats.absent, THEME.absent],
+    ["Not held", stats.notHeld, THEME.notHeld],
+    ["Holidays", stats.holidayCount, THEME.holiday],
+    ["Pending", stats.pending, THEME.pending]
+  ];
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">';
+  boxes.forEach(function (b) {
+    html += '<div style="border-radius:10px;padding:10px 0;text-align:center;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
+      '<div class="sg" style="font-size:18px;color:' + b[2] + '">' + b[1] + '</div>' +
+      '<div style="font-size:10px;margin-top:2px;color:' + THEME.inkSoft + '">' + b[0] + '</div></div>';
+  });
+  html += '</div>';
+
+  html += '<div style="border-radius:10px;padding:12px;margin-bottom:16px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
+    '<div style="font-size:14px;font-weight:500;margin-bottom:10px;color:' + THEME.ink + '">Attended vs Absent by subject</div>';
+  if (chartRows.length === 0) {
+    html += '<p style="font-size:12px;padding:24px 0;text-align:center;color:' + THEME.inkSoft + '">Log a few classes to see this chart fill in.</p>';
+  } else {
+    chartRows.forEach(function (r) {
+      var total = r.attended + r.absent;
+      var attPct = total > 0 ? (r.attended / maxVal) * 100 : 0;
+      var absPct = total > 0 ? (r.absent / maxVal) * 100 : 0;
+      html += '<div style="margin-bottom:10px">' +
+        '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:' + THEME.ink + '">' +
+          '<span>' + esc(r.subject) + '</span><span style="color:' + THEME.inkSoft + '">' + r.attended + '/' + total + '</span></div>' +
+        '<div style="display:flex;width:100%;height:8px;border-radius:4px;overflow:hidden;background:' + THEME.hairline + '">' +
+          '<div style="width:' + attPct + '%;background:' + THEME.attended + '"></div>' +
+          '<div style="width:' + absPct + '%;background:' + THEME.absent + '"></div>' +
+        '</div></div>';
+    });
+  }
+  html += '</div>';
+
+  html += '<div style="border-radius:10px;overflow:hidden;margin-bottom:16px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
+    '<div style="font-size:14px;font-weight:500;padding:12px 12px 8px;color:' + THEME.ink + '">By subject</div>' +
+    '<table style="font-size:12px"><thead><tr style="color:' + THEME.inkSoft + ';border-top:1px solid ' + THEME.hairline + '">' +
+      '<th style="text-align:left;font-weight:500;padding:6px 12px">Subject</th>' +
+      '<th style="text-align:right;font-weight:500;padding:6px 8px">Held</th>' +
+      '<th style="text-align:right;font-weight:500;padding:6px 8px">Att.</th>' +
+      '<th style="text-align:right;font-weight:500;padding:6px 8px">Abs.</th>' +
+      '<th style="text-align:right;font-weight:500;padding:6px 12px">%</th></tr></thead><tbody>';
+  stats.subjectRows.forEach(function (r) {
+    html += '<tr style="border-top:1px solid ' + THEME.hairline + '">' +
+      '<td style="padding:6px 12px;color:' + THEME.ink + '">' + esc(r.subject) + '</td>' +
+      '<td style="text-align:right;padding:6px 8px;color:' + THEME.inkSoft + '">' + (r.attended + r.absent) + '</td>' +
+      '<td style="text-align:right;padding:6px 8px;color:' + THEME.attended + '">' + r.attended + '</td>' +
+      '<td style="text-align:right;padding:6px 8px;color:' + THEME.absent + '">' + r.absent + '</td>' +
+      '<td style="text-align:right;padding:6px 12px;font-weight:500;color:' + THEME.ink + '">' + (r.percent === null ? "—" : r.percent + "%") + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '<div style="margin-bottom:6px">';
+  if (!state.confirmReset) {
+    html += '<button data-act="askreset" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;padding:8px 0;border-radius:8px;color:' + THEME.inkSoft + ';border:1px solid ' + THEME.hairline + '">' +
+      ICONS.reset(13) + 'Reset all data</button>';
+  } else {
+    html += '<div style="border-radius:8px;padding:12px;text-align:center;background:' + THEME.absentSoft + '">' +
+      '<p style="font-size:12px;margin:0 0 8px;color:' + THEME.ink + '">This clears every tick you\'ve logged. This can\'t be undone.</p>' +
+      '<div style="display:flex;gap:8px;justify-content:center">' +
+        '<button data-act="doreset" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.absent + ';color:#fff">Yes, reset</button>' +
+        '<button data-act="cancelreset" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.card + ';color:' + THEME.ink + ';border:1px solid ' + THEME.hairline + '">Cancel</button>' +
+      '</div></div>';
+  }
+  html += '</div>';
+
+  html += '<p style="font-size:10.5px;text-align:center;margin:8px 0 24px;color:' + THEME.pending + '">Built by Sharad Sourav, for personal use only.</p>';
+  html += '</div>';
+  return html;
+}
+
+/* ---------------- render root ---------------- */
+function render() {
+  var root = document.getElementById("app");
+  var content = state.tab === "log" ? renderLogTab() : renderStatsTab();
+  root.innerHTML =
+    '<div style="background:' + THEME.bg + ';min-height:100vh;display:flex;flex-direction:column">' +
+      renderHeader() +
+      '<div style="flex:1;padding-bottom:80px">' + content + '</div>' +
+      renderBottomNav() +
+    '</div>';
+}
+
+/* ---------------- event delegation ---------------- */
+document.addEventListener("click", function (e) {
+  var el = e.target.closest("[data-act]");
+  if (!el) return;
+  var act = el.getAttribute("data-act");
+  if (act === "tab") { state.tab = el.getAttribute("data-tab"); render(); }
+  else if (act === "prevday") { state.viewDate = clampToRange(addDays(state.viewDate, -1)); render(); }
+  else if (act === "nextday") { state.viewDate = clampToRange(addDays(state.viewDate, 1)); render(); }
+  else if (act === "goToday") { state.viewDate = todayClamped(); render(); }
+  else if (act === "toggleholiday") { toggleHoliday(el.getAttribute("data-key")); }
+  else if (act === "setstatus") { setSessionStatus(el.getAttribute("data-key"), el.getAttribute("data-value")); }
+  else if (act === "askreset") { state.confirmReset = true; render(); }
+  else if (act === "cancelreset") { state.confirmReset = false; render(); }
+  else if (act === "doreset") { resetAll(); }
+  /* "noop" intentionally does nothing (locked/disabled controls) */
+});
+document.addEventListener("change", function (e) {
+  if (e.target && e.target.getAttribute && e.target.getAttribute("data-act") === "datepick") {
+    var val = e.target.value;
+    if (val) {
+      var parts = val.split("-").map(Number);
+      state.viewDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      render();
+    }
+  }
+});
+
+/* ---------------- day auto-advance ---------------- */
+function checkDay() {
+  var nowKey = dkey(realToday());
+  if (nowKey !== state.knownToday) {
+    state.knownToday = nowKey;
+    state.viewDate = todayClamped();
+    state.tab = "log";
+  }
+  render();
+}
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checkDay(); });
+window.addEventListener("focus", checkDay);
+setInterval(checkDay, 60 * 1000);
+
+/* ---------------- boot ---------------- */
+loadState();
+render();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
