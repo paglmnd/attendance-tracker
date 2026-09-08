@@ -16,7 +16,7 @@
 <body><div id="app"></div>
 <script>
 "use strict";
-const START_DATE=new Date(2026,8,7), KEY="attendance-tracker-data-v11-once-past";
+const START_DATE=new Date(2026,8,7), KEY="attendance-tracker-data-v12-per-class-past-once";
 const STATUS={ATTENDED:"attended",ABSENT:"absent",LEAVE:"leave",NOT_HELD:"not_held"};
 const CLINICAL_SWITCH=new Date(2027,7,9);
 const CLINICAL_OLD=[["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Respiratory Medicine"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Respiratory Medicine"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Psychiatry"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Psychiatry"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Dermatology"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Dermatology"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Anaesthesiology (ICU)"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Anaesthesiology (ICU)"],["G.Surgery","OBG","G.Medicine","ENT","Respiratory Medicine","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Respiratory Medicine","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Psychiatry","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Psychiatry","Pediatrics"],["G.Surgery","OBG","G.Medicine","EYE","Dermatology","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Dermatology","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Anaesthesiology (ICU)","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Anaesthesiology (ICU)","Orthopaedics"],["OBG","G.Medicine","G.Surgery","Respiratory Medicine","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Respiratory Medicine","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Psychiatry","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Psychiatry","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Dermatology","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Dermatology","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Anaesthesiology (ICU)","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Anaesthesiology (ICU)","Orthopaedics","EYE"],["Respiratory Medicine","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Respiratory Medicine","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Psychiatry","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Psychiatry","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Dermatology","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Dermatology","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Anaesthesiology (ICU)","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Anaesthesiology (ICU)","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["ENT","Respiratory Medicine","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Respiratory Medicine","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Psychiatry","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Psychiatry","Pediatrics","G.Surgery","OBG","G.Medicine"],["EYE","Dermatology","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Dermatology","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Anaesthesiology (ICU)","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Anaesthesiology (ICU)","Orthopaedics","G.Surgery","OBG","G.Medicine"],["Pediatrics","ENT","Respiratory Medicine","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Respiratory Medicine","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Psychiatry","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Psychiatry","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Dermatology","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Dermatology","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Anaesthesiology (ICU)","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Anaesthesiology (ICU)","G.Medicine","G.Surgery","OBG"]];
@@ -53,10 +53,16 @@ function watchSystemTheme(){
 function editable(k){
   let d=parseKey(k),t=today();
   if(d<START_DATE||d>t)return false;
-  // Today follows the existing opening time rule. Past dates may be filled once,
-  // and become permanently locked immediately after the first attendance save.
+  // Today follows the existing opening time rule. Past dates stay open only for classes
+  // that are currently unmarked; once a class has a saved status it is locked.
   if(d.getTime()===t.getTime())return new Date().getHours()>=Number(state.settings.unlockHour||0);
-  return !(state.finalizedDays&&state.finalizedDays[k]);
+  return true;
+}
+function sessionEditable(dk,i){
+  if(!editable(dk))return false;
+  let d=parseKey(dk);
+  if(d<today() && statusOf(dk,i))return false;
+  return true;
 }
 function subjectBase(s){return String(s).replace(/\s\(ALC\)$/," ").replace(/\s\(Clinical\)$/," ").trim()}
 function subjectKind(s){return /\(ALC\)$/.test(s)?1:/\(Clinical\)$/.test(s)?2:0}
@@ -77,19 +83,18 @@ function sessionKey(dateKey,i){return dateKey+"-"+i}
 function statusOf(dateKey,i){return state.status[sessionKey(dateKey,i)]}
 function draftValue(k){return Object.prototype.hasOwnProperty.call(draftStatus,k)?draftStatus[k]:state.status[k]}
 function ensureDraft(dk){if(draftDate!==dk){draftDate=dk;draftStatus={}}}
-function setStatus(k,v){let dk=k.slice(0,10);if(!editable(dk))return;ensureDraft(dk);let current=draftValue(k);if(current===v){draftStatus[k]=null}else{draftStatus[k]=v}render()}
+function setStatus(k,v){let dk=k.slice(0,10),i=Number(k.slice(dk.length+1));if(!sessionEditable(dk,i))return;ensureDraft(dk);let current=draftValue(k);if(current===v){draftStatus[k]=null}else{draftStatus[k]=v}render()}
 function saveAttendance(dk){
   if(!editable(dk))return;
   ensureDraft(dk);
   let changes=Object.keys(draftStatus);
   if(!changes.length){toast("No attendance changes to save");return}
   let past=parseKey(dk)<today();
-  if(!confirm(past?"Save this past date? After saving, this date will be permanently locked.":"Save the selected attendance for today?"))return;
+  if(!confirm(past?"Save the selected attendance for this past date? Marked classes will lock, while unmarked classes can still be filled later.":"Save the selected attendance for today?"))return;
   state.records=state.records||{};
   let ss=sessionsFor(parseKey(dk));
   changes.forEach(k=>{let v=draftStatus[k],i=Number(k.slice(dk.length+1));if(v){state.status[k]=v;let x=ss[i];if(x)state.records[k]={subject:x[2],scheduled:x._scheduled||x[2],start:x[0],end:x[1]}}else{delete state.status[k];delete state.records[k]}});
-  if(past){state.finalizedDays=state.finalizedDays||{};state.finalizedDays[dk]=true}
-  save();draftStatus={};draftDate=dk;render();toast(past?"Attendance saved and permanently locked":"Attendance saved")
+  save();draftStatus={};draftDate=dk;render();toast(past?"Attendance saved — marked classes are now locked":"Attendance saved")
 }
 function toggleHoliday(dk){if(!editable(dk))return;state.holidays[dk]?delete state.holidays[dk]:state.holidays[dk]=true;save();render()}
 function setNote(dk,text){if(!editable(dk))return;if(text.trim())state.notes[dk]=text.trim();else delete state.notes[dk];save();toast("Note saved")}
@@ -99,20 +104,19 @@ function dayProgress(d){let dk=key(d),ss=sessionsFor(d);if(state.holidays[dk])re
 function header(){return `<div class="header"><div class="brand">▣ Attendance</div><p class="sub">7 Sep 2026 onwards · ${esc(state.settings.course)}</p><p class="sub">Personal attendance tracker</p></div>`}
 function dateControls(){let d=parseKey(state.viewDate);return `<div class="card datebar"><button class="iconbtn" data-act="prev">‹</button><button data-act="pickDate" style="background:transparent;color:var(--ink);border:0" class="datecenter"><b>${DAYS[d.getDay()]}</b><span>${fmt(d)} · 📅</span></button><button class="iconbtn" data-act="next">›</button></div><div class="row" style="margin-bottom:10px"><button class="btn outline grow" data-act="dateInput">Choose date</button>${key(d)!==key(today())?`<button class="btn soft" data-act="today">Today</button>`:""}</div>`}
 function logTab(){
-  let d=parseKey(state.viewDate),dk=key(d),ss=sessionsFor(d),past=d<today(),future=d>today(),can=editable(dk),before=!past&&!future&&!can,isHoliday=!!state.holidays[dk],p=dayProgress(d),finalized=!!(state.finalizedDays&&state.finalizedDays[dk]);
+  let d=parseKey(state.viewDate),dk=key(d),ss=sessionsFor(d),past=d<today(),future=d>today(),can=editable(dk),before=!past&&!future&&!can,isHoliday=!!state.holidays[dk],p=dayProgress(d);
   let h=dateControls();
   if(d<START_DATE)return h+`<div class="banner lock">🔒 Attendance tracking starts on 7 Sep 2026.</div>`;
   if(ss.length)h+=`<div class="card progressCard"><div class="progressHead"><b>Day's progress</b><span class="progressText">${isHoliday?"Holiday":p.marked+" / "+p.total+" marked"}</span></div><div class="progress"><i style="width:${p.total?p.marked/p.total*100:0}%"></i></div></div>`;
   if(before)h+=`<div class="banner warn">🕕 Logging opens at 6:00 AM.</div>`;
   else if(future)h+=`<div class="banner lock">🔒 Future date — it becomes editable when that day arrives.</div>`;
-  else if(past&&finalized)h+=`<div class="banner lock">🔒 This past date was saved and is permanently locked.</div>`;
-  else if(past)h+=`<div class="banner info">✓ This past date has not been saved yet. You can enter attendance once; after saving it will be permanently locked.</div>`;
+  else if(past)h+=`<div class="banner info">✓ Past classes are handled individually: an unmarked class can be entered once. After it is marked and saved, that class is permanently locked.</div>`;
   else h+=`<div class="banner info">✓ Today is editable until midnight.</div>`;
   if(!ss.length)return h+`<div class="card formCard" style="text-align:center;color:var(--soft)">No classes scheduled — Sunday.</div>`;
   h+=`<button class="holiday" data-act="holiday" ${can?"":"disabled"}>${isHoliday?"🏖 Marked as holiday"+(can?" — tap to undo":""):can?"🏖 Mark whole day as holiday":"🔒 Not a holiday"}</button>`;
   if(!isHoliday){
-    ss.forEach((s,i)=>{let cur=draftValue(sessionKey(dk,i)),locked=can?"":"disabled",changed=s._scheduled&&s._scheduled!==s[2];h+=`<div class="card session"><div class="sessionTop"><div><div class="sessionName">${esc(s[2])}${changed?" 🔄":""}</div>${changed?`<div class="small">Scheduled: ${esc(s._scheduled)}</div>`:""}<div class="sessionTime">${time(s[0])} – ${time(s[1])}</div></div><div>${can?`<button class="btn outline" style="padding:7px 9px;font-size:11px" data-act="editClass" data-i="${i}">✏️ Edit</button>`:`<div class="locktag">${future?"🔒 Future":past?"🔒 Locked":"🕕 Opens later"}</div>`}</div></div><div class="statusRow"><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="attended" class="status green ${cur==="attended"?"active":""}">✓<br>Present</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="absent" class="status red ${cur==="absent"?"active":""}">✕<br>Absent</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="not_held" class="status gray ${cur==="not_held"?"active":""}">⊘<br>Not held</button></div></div>`});
-    if(can){h+=`<button class="btn outline" style="width:100%;margin-top:8px" data-act="addExtra">＋ Add extra class</button>`;if(Object.keys(draftStatus).length)h+=`<button class="saveAttendance" data-act="saveAttendance">💾 Save attendance${past?" & lock date":""}</button>`}
+    ss.forEach((s,i)=>{let cur=draftValue(sessionKey(dk,i)),slotCan=sessionEditable(dk,i),locked=slotCan?"":"disabled",changed=s._scheduled&&s._scheduled!==s[2];h+=`<div class="card session"><div class="sessionTop"><div><div class="sessionName">${esc(s[2])}${changed?" 🔄":""}</div>${changed?`<div class="small">Scheduled: ${esc(s._scheduled)}</div>`:""}<div class="sessionTime">${time(s[0])} – ${time(s[1])}</div></div><div>${slotCan?`<button class="btn outline" style="padding:7px 9px;font-size:11px" data-act="editClass" data-i="${i}">✏️ Edit</button>`:`<div class="locktag">${future?"🔒 Future":past?"🔒 Saved":"🕕 Opens later"}</div>`}</div></div><div class="statusRow"><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="attended" class="status green ${cur==="attended"?"active":""}">✓<br>Present</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="absent" class="status red ${cur==="absent"?"active":""}">✕<br>Absent</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="not_held" class="status gray ${cur==="not_held"?"active":""}">⊘<br>Not held</button></div></div>`});
+    if(can){h+=`<button class="btn outline" style="width:100%;margin-top:8px" data-act="addExtra">＋ Add extra class</button>`;if(Object.keys(draftStatus).length)h+=`<button class="saveAttendance" data-act="saveAttendance">💾 Save attendance${past?"":""}</button>`}
     h+=`<div class="card noteBox"><h3>📝 Note for this day</h3><textarea id="dayNote" ${can?"":"disabled"} placeholder="Optional note...">${esc(state.notes[dk]||"")}</textarea>${can?`<div style="margin-top:8px"><button class="btn soft" data-act="saveNote">Save note</button></div>`:""}</div>`
   }else h+=`<div class="card formCard" style="text-align:center">🏖 Classes are excluded from attendance calculations for this holiday.</div>`;
   return h
