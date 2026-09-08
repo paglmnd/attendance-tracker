@@ -1,472 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Attendance Tracker — Sharad Sourav</title>
-<meta name="author" content="Sharad Sourav" />
-<meta name="description" content="Personal attendance tracker built by Sharad Sourav for personal use." />
-<meta name="theme-color" content="#2A5C54" />
-<link rel="manifest" href="manifest.json" />
-<link rel="icon" href="icon-192.png" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Attendance Tracker</title>
+<meta name="theme-color" content="#2A5C54">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body, #app { margin: 0; padding: 0; min-height: 100%; background: #F5F6F4; }
-  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  button { font-family: inherit; border: none; background: none; cursor: pointer; }
-  input { font-family: inherit; }
-  table { border-collapse: collapse; width: 100%; }
-  .sg { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-weight: 700; }
+:root{--bg:#f4f6f5;--card:#fff;--ink:#1d2730;--soft:#69737d;--line:#dfe5e2;--primary:#2a5c54;--primarySoft:#e5f0ed;--green:#248c5b;--greenSoft:#e6f5ec;--red:#bf4c3b;--redSoft:#fae9e6;--yellow:#9a7b1f;--yellowSoft:#f7f0d7;--purple:#725aa7;--purpleSoft:#eee9f7;--shadow:0 4px 18px rgba(20,35,30,.06)}
+[data-theme="dark"]{--bg:#121817;--card:#1b2421;--ink:#edf3ef;--soft:#aab6b0;--line:#2d3935;--primary:#72b8a8;--primarySoft:#203b35;--green:#67c98e;--greenSoft:#183829;--red:#ef8a7b;--redSoft:#412522;--yellow:#d5b95c;--yellowSoft:#3d3418;--purple:#b6a1e4;--purpleSoft:#322a45;--shadow:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body,#app{margin:0;min-height:100%;background:var(--bg)}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{border:0;cursor:pointer}button:disabled{cursor:not-allowed}.app{min-height:100vh;background:var(--bg)}.header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);padding:16px 16px 10px}.brand{display:flex;align-items:center;gap:9px;font-size:20px;font-weight:800}.sub{font-size:12px;color:var(--soft);margin:3px 0}.container{padding:0 14px 92px;max-width:760px;margin:auto}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.datebar{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;padding:7px;margin:6px 0 10px}.iconbtn{width:42px;height:42px;border-radius:12px;background:transparent;color:var(--ink);font-size:28px}.datecenter{text-align:center}.datecenter b{display:block;font-size:16px}.datecenter span{font-size:12px;color:var(--soft)}.row{display:flex;gap:8px;align-items:center}.grow{flex:1}.btn{padding:11px 13px;border-radius:12px;background:var(--primary);color:white;font-weight:700}.btn.soft{background:var(--primarySoft);color:var(--primary)}.btn.outline{background:var(--card);border:1px solid var(--line);color:var(--ink)}.todayonly{display:none}.banner{padding:10px 12px;border-radius:13px;margin:10px 0;font-size:12px;display:flex;gap:8px;align-items:center}.banner.info{background:var(--primarySoft);color:var(--primary)}.banner.warn{background:var(--yellowSoft);color:var(--yellow)}.banner.lock{background:var(--purpleSoft);color:var(--purple)}.progressCard{padding:14px;margin-bottom:10px}.progressHead{display:flex;justify-content:space-between;align-items:center}.progressHead b{font-size:14px}.progressText{font-size:12px;color:var(--soft)}.progress{height:9px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}.progress>i{display:block;height:100%;width:0;background:var(--primary);border-radius:99px}.holiday{width:100%;padding:11px;border-radius:13px;background:var(--purpleSoft);color:var(--purple);font-weight:700;margin:0 0 10px}.session{padding:13px;margin:9px 0;border-left:4px solid var(--primary)}.sessionTop{display:flex;justify-content:space-between;gap:10px}.sessionName{font-weight:800;font-size:16px}.sessionTime,.small{font-size:12px;color:var(--soft)}.locktag{font-size:11px;color:var(--soft);white-space:nowrap}.statusRow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px}.status{min-height:54px;border-radius:11px;font-size:12px;font-weight:800;border:1px solid var(--line);background:var(--line);color:var(--soft);transition:.15s}.status.green.active{background:var(--greenSoft);color:var(--green);border-color:var(--green)}.status.red.active{background:var(--redSoft);color:var(--red);border-color:var(--red)}.status.gray.active{background:#cfd6d3;color:#4f5a55;border-color:#8f9994}[data-theme="dark"] .status.gray.active{background:#37423f;color:#e1e8e4;border-color:#6d7973}.saveAttendance{width:100%;margin:12px 0 4px;background:var(--primary);color:#fff;font-weight:800;padding:13px;border-radius:13px}.madeby{text-align:center;color:var(--soft);font-size:12px;padding:18px 0 10px;font-weight:700}.statsHero{padding:20px;text-align:center;margin-bottom:10px}.ring{width:126px;height:126px;border-radius:50%;margin:0 auto 10px;display:grid;place-items:center;background:conic-gradient(var(--primary) var(--p),var(--line) 0)}.ringIn{width:104px;height:104px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:25px;font-weight:900}.grid4{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}.metric{padding:13px;text-align:center}.metric b{font-size:21px}.metric span{display:block;font-size:11px;color:var(--soft);margin-top:3px}.sectionTitle{font-weight:900;font-size:16px;margin:16px 2px 8px}.subject{padding:14px;margin:9px 0}.subjectHead{display:flex;justify-content:space-between;gap:10px}.subjectName{font-weight:800}.pct{font-weight:900}.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:10px 0 8px}.bar i{display:block;height:100%;background:var(--primary);border-radius:99px}.subjectMeta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--soft)}.safe{color:var(--green)}.warning{color:var(--yellow)}.danger{color:var(--red)}.tabs{display:flex;gap:7px;overflow:auto;padding:3px 0 8px}.filter{padding:8px 11px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--soft);font-size:12px;white-space:nowrap}.filter.active{background:var(--primary);color:#fff;border-color:var(--primary)}.calendar{padding:12px}.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calDow{text-align:center;font-size:10px;color:var(--soft);padding-bottom:4px}.calDay{aspect-ratio:1;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-size:11px;color:var(--ink);position:relative}.calDay.empty{visibility:hidden}.calDay.today{outline:2px solid var(--primary)}.dot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--soft)}.dot.good{background:var(--green)}.dot.bad{background:var(--red)}.dot.mix{background:var(--yellow)}.dot.holiday{background:var(--purple)}.formCard{padding:14px;margin:10px 0}.label{display:block;font-size:12px;font-weight:800;margin:12px 0 5px}.input,textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink)}textarea{min-height:80px;resize:vertical}.noteBox{padding:12px;margin:10px 0}.noteBox h3{margin:0 0 8px;font-size:14px}.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:7px max(8px,env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom))}.nav button{flex:1;background:transparent;color:var(--soft);padding:6px 2px;font-size:11px}.nav button b{display:block;font-size:21px;line-height:23px}.nav button.active{color:var(--primary);font-weight:800}.hidden{display:none!important}.modal{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:50;display:grid;place-items:end center;padding:12px}.modalBox{width:min(700px,100%);background:var(--card);border-radius:20px;padding:18px;max-height:88vh;overflow:auto}.toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--card);padding:11px 15px;border-radius:99px;font-size:12px;box-shadow:var(--shadow)}@media(min-width:620px){.statusRow{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
-<body>
-<div id="app"></div>
-
+<body><div id="app"></div>
 <script>
 "use strict";
+const START_DATE=new Date(2026,8,7), KEY="attendance-tracker-data-v11-once-past";
+const STATUS={ATTENDED:"attended",ABSENT:"absent",LEAVE:"leave",NOT_HELD:"not_held"};
+const CLINICAL_SWITCH=new Date(2027,7,9);
+const CLINICAL_OLD=[["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Respiratory Medicine"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Respiratory Medicine"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Psychiatry"],["G.Medicine","G.Surgery","OBG","Pediatrics","ENT","Psychiatry"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Dermatology"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Dermatology"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Anaesthesiology (ICU)"],["G.Medicine","G.Surgery","OBG","Orthopaedics","EYE","Anaesthesiology (ICU)"],["G.Surgery","OBG","G.Medicine","ENT","Respiratory Medicine","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Respiratory Medicine","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Psychiatry","Pediatrics"],["G.Surgery","OBG","G.Medicine","ENT","Psychiatry","Pediatrics"],["G.Surgery","OBG","G.Medicine","EYE","Dermatology","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Dermatology","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Anaesthesiology (ICU)","Orthopaedics"],["G.Surgery","OBG","G.Medicine","EYE","Anaesthesiology (ICU)","Orthopaedics"],["OBG","G.Medicine","G.Surgery","Respiratory Medicine","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Respiratory Medicine","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Psychiatry","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Psychiatry","Pediatrics","ENT"],["OBG","G.Medicine","G.Surgery","Dermatology","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Dermatology","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Anaesthesiology (ICU)","Orthopaedics","EYE"],["OBG","G.Medicine","G.Surgery","Anaesthesiology (ICU)","Orthopaedics","EYE"],["Respiratory Medicine","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Respiratory Medicine","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Psychiatry","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Psychiatry","Pediatrics","ENT","OBG","G.Medicine","G.Surgery"],["Dermatology","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Dermatology","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Anaesthesiology (ICU)","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["Anaesthesiology (ICU)","Orthopaedics","EYE","OBG","G.Medicine","G.Surgery"],["ENT","Respiratory Medicine","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Respiratory Medicine","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Psychiatry","Pediatrics","G.Surgery","OBG","G.Medicine"],["ENT","Psychiatry","Pediatrics","G.Surgery","OBG","G.Medicine"],["EYE","Dermatology","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Dermatology","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Anaesthesiology (ICU)","Orthopaedics","G.Surgery","OBG","G.Medicine"],["EYE","Anaesthesiology (ICU)","Orthopaedics","G.Surgery","OBG","G.Medicine"],["Pediatrics","ENT","Respiratory Medicine","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Respiratory Medicine","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Psychiatry","G.Medicine","G.Surgery","OBG"],["Pediatrics","ENT","Psychiatry","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Dermatology","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Dermatology","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Anaesthesiology (ICU)","G.Medicine","G.Surgery","OBG"],["Orthopaedics","EYE","Anaesthesiology (ICU)","G.Medicine","G.Surgery","OBG"]];
+const CLINICAL_NEW=[["G.Surgery","OBG","Radiodiagnosis","Emergency Medicine"],["G.Surgery","OBG","Radiodiagnosis","Emergency Medicine"],["Emergency Medicine","Radiodiagnosis","OBG","G.Surgery"],["Emergency Medicine","Radiodiagnosis","OBG","G.Surgery"],["G.Medicine","ENT","Emergency Medicine","Radiodiagnosis"],["G.Medicine","ENT","Emergency Medicine","Radiodiagnosis"],["Radiodiagnosis","Emergency Medicine","ENT","G.Medicine"],["Radiodiagnosis","Emergency Medicine","ENT","G.Medicine"]];
+let draftDate=null,draftStatus={};
+const SUBJECT_LIST=["AETCOM / Pandemic Module","Anaesthesiology (ICU)","Anaesthesiology (ICU) (Clinical)","Anesthesia","Anesthesia (ALC)","Clinical Posting","Dermatology","Dermatology (ALC)","Dermatology (Clinical)","Emergency Medicine","Emergency Medicine (ALC)","Emergency Medicine (Clinical)","ENT","ENT (ALC)","ENT (Clinical)","EYE","EYE (ALC)","EYE (Clinical)","General Medicine","General Medicine (ALC)","General Medicine (Clinical)","General Surgery","General Surgery (ALC)","General Surgery (Clinical)","Monthly Assessment (ALC)","OBG","OBG (ALC)","OBG (Clinical)","Orthopedics","Orthopedics (ALC)","Orthopedics (Clinical)","Pediatrics","Pediatrics (ALC)","Pediatrics (Clinical)","Psychiatry","Psychiatry (ALC)","Psychiatry (Clinical)","Radiodiagnosis","Radiodiagnosis (ALC)","Radiodiagnosis (Clinical)","Respiratory Medicine","Respiratory Medicine (ALC)","Respiratory Medicine (Clinical)"];
+function subjectOptions(selected=""){let opts=SUBJECT_LIST.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("");return `<select id="subjectSelect" class="input"><option value="">Select subject</option>${opts}<option value="__OTHER__">Other (type manually)</option></select><div id="otherSubjectWrap" class="hidden"><label class="label">Other subject / activity</label><input id="otherSubject" class="input" placeholder="Type carefully"></div>`}
+function selectedSubject(){let sel=document.getElementById("subjectSelect");if(!sel)return "";return sel.value==="__OTHER__"?(document.getElementById("otherSubject")?.value.trim()||""):sel.value}
+const DEFAULT_SCHEDULE={1:[["09:00","10:00","General Medicine"],["10:00","11:00","OBG"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Medicine (ALC)"]],2:[["09:00","10:00","General Medicine"],["10:00","11:00","General Surgery"],["11:00","14:00","Clinical Posting"],["15:00","17:00","OBG (ALC)"]],3:[["09:00","10:00","General Surgery"],["10:00","11:00","Pediatrics"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Surgery (ALC)"]],4:[["09:00","10:00","ENT"],["10:00","11:00","Psychiatry"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Respiratory Medicine (ALC)"],["16:00","17:00","Pediatrics (ALC)"]],5:[["09:00","10:00","EYE"],["10:00","11:00","Dermatology"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Orthopedics (ALC)"],["16:00","17:00","General Medicine (ALC)"]],6:[["09:00","10:00","OBG"],["10:00","11:00","Orthopedics"],["11:00","12:00","General Surgery"],["12:00","14:00","AETCOM / Pandemic Module"],["15:00","17:00","Monthly Assessment (ALC)"]]};
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+function clone(x){return JSON.parse(JSON.stringify(x))}function pad(n){return String(n).padStart(2,"0")}function key(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}function parseKey(k){let p=k.split("-").map(Number);return new Date(p[0],p[1]-1,p[2])}function add(d,n){let x=new Date(d);x.setDate(x.getDate()+n);return x}function today(){let d=new Date();d.setHours(0,0,0,0);return d}function fmt(d){return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})}function monthFmt(d){return d.toLocaleDateString("en-GB",{month:"long",year:"numeric"})}function time(s){let[h,m]=s.split(":").map(Number),ap=h>=12?"PM":"AM";h=h%12||12;return h+":"+pad(m)+" "+ap}function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]))}
+function defaultState(){return {status:{},records:{},holidays:{},notes:{},overrides:{},extraClasses:{},finalizedDays:{},tab:"log",viewDate:key(today()),calendarMonth:key(new Date(today().getFullYear(),today().getMonth(),1)),statsFilter:"all",settings:{name:"Sharad Sourav",course:"3rd Prof Part-II",required:75,unlockHour:6,theme:"system",rollNumber:"",rollLocked:false,schedule:clone(DEFAULT_SCHEDULE)}}}
+let state=defaultState();
+function applyALCLabels(){let changed=false;Object.values(state.settings.schedule||{}).forEach(a=>(a||[]).forEach(s=>{let h=Number(String(s[0]).slice(0,2));if(h>=15&&!/\s\(ALC\)$/.test(s[2])){s[2]=s[2]+" (ALC)";changed=true}}));return changed}
+function load(){try{let raw=localStorage.getItem(KEY);if(raw){state={...defaultState(),...JSON.parse(raw)};state.settings={...defaultState().settings,...state.settings};state.settings.unlockHour=6;state.overrides=state.overrides||{};state.extraClasses=state.extraClasses||{};state.finalizedDays=state.finalizedDays||{};applyALCLabels();return}}catch(e){console.warn(e)}}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function applyTheme(){
+  const systemDark=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;
+  let t=state.settings.theme;
+  if(t!=="light"&&t!=="dark"&&t!=="system")t="system";
+  const resolved=t==="system"?(systemDark?"dark":"light"):t;
+  document.documentElement.setAttribute("data-theme",resolved);
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute("content",resolved==="dark"?"#121817":"#F4F6F5");
+}
+function watchSystemTheme(){
+  if(!window.matchMedia)return;
+  const media=window.matchMedia("(prefers-color-scheme: dark)");
+  const update=()=>{if(state.settings.theme==="system"){applyTheme();render()}};
+  if(media.addEventListener)media.addEventListener("change",update);
+  else if(media.addListener)media.addListener(update);
+}
+function editable(k){
+  let d=parseKey(k),t=today();
+  if(d<START_DATE||d>t)return false;
+  // Today follows the existing opening time rule. Past dates may be filled once,
+  // and become permanently locked immediately after the first attendance save.
+  if(d.getTime()===t.getTime())return new Date().getHours()>=Number(state.settings.unlockHour||0);
+  return !(state.finalizedDays&&state.finalizedDays[k]);
+}
+function subjectBase(s){return String(s).replace(/\s\(ALC\)$/," ").replace(/\s\(Clinical\)$/," ").trim()}
+function subjectKind(s){return /\(ALC\)$/.test(s)?1:/\(Clinical\)$/.test(s)?2:0}
+function subjects(){let set=new Set,raw=[];let scan=d=>sessionsFor(d).forEach(s=>{if(!set.has(s[2])){set.add(s[2]);raw.push(s[2])}});Object.values(state.settings.schedule).forEach(a=>(a||[]).forEach(s=>{if(s[2]!=="Clinical Posting"&&!set.has(s[2])){set.add(s[2]);raw.push(s[2])}}));let cur=new Date(START_DATE),endd=rangeEnd();while(cur<=endd){scan(cur);cur=add(cur,1)};let bases=[];raw.forEach(x=>{let b=subjectBase(x);if(!bases.includes(b))bases.push(b)});return raw.slice().sort((a,b)=>{let ba=subjectBase(a),bb=subjectBase(b),ia=bases.indexOf(ba),ib=bases.indexOf(bb);if(ia!==ib)return ia-ib;return subjectKind(a)-subjectKind(b)})}
+function clinicalGroupFor(d){let r=Number(state.settings.rollNumber);if(!Number.isFinite(r)||r<1||r>100)return -1;if(d<CLINICAL_SWITCH)return r<=16?0:r<=32?1:r<=49?2:r<=66?3:r<=83?4:5;return r<=25?0:r<=50?1:r<=75?2:3}
+function clinicalDepartmentFor(d){let start=d<CLINICAL_SWITCH?START_DATE:CLINICAL_SWITCH;let arr=d<CLINICAL_SWITCH?CLINICAL_OLD:CLINICAL_NEW;let monday=new Date(d);monday.setHours(0,0,0,0);monday.setDate(monday.getDate()-((monday.getDay()+6)%7));let wk=Math.floor((monday-start)/(7*86400000));let g=clinicalGroupFor(d);return wk>=0&&wk<arr.length&&g>=0&&g<arr[wk].length?arr[wk][g]:"Clinical department not scheduled"}
+function nthWeekdayOfMonth(d){return Math.floor((d.getDate()-1)/7)+1}
+function applyDateBasedALC(d,x){let day=d.getDay(),n=nthWeekdayOfMonth(d),st=x[0],en=x[1],sub=x[2];
+// Apply automatic week-of-month rules only to the original timetable slots.
+// If Manage Schedule changes a slot to another subject, that saved subject is respected.
+if(day===4&&st==="15:00"&&en==="16:00"&&["Respiratory Medicine (ALC)","Radiodiagnosis (ALC)"].includes(sub))x[2]=(n<=2?"Respiratory Medicine":"Radiodiagnosis")+" (ALC)";
+else if(day===4&&st==="16:00"&&en==="17:00"&&["Pediatrics (ALC)","Anesthesia (ALC)"].includes(sub))x[2]=(n<=2?"Pediatrics":"Anesthesia")+" (ALC)";
+else if(day===5&&st==="15:00"&&en==="16:00"&&["Orthopedics (ALC)","OBG (ALC)"].includes(sub))x[2]=(n<=2?"Orthopedics":"OBG")+" (ALC)";
+else if(day===5&&st==="16:00"&&en==="17:00"&&sub==="General Medicine (ALC)")x[2]="General Medicine (ALC)";
+return x}
+function sessionsFor(d){let dk=key(d),base=(state.settings.schedule[d.getDay()]||[]).map(x=>clone(x));base=base.map((x,i)=>{applyDateBasedALC(d,x);let original=x[2];if(original==="Clinical Posting"){let dep=clinicalDepartmentFor(d);x[2]=dep+" (Clinical)";x._scheduled=original; x._clinical=true}else x._scheduled=original;if(state.overrides&&state.overrides[dk]&&state.overrides[dk][i]){let o=state.overrides[dk][i];x._scheduled=x[2];if(typeof o==="string")x[2]=o;else{x[2]=o.subject||x[2];x[0]=o.start||x[0];x[1]=o.end||x[1]}}return x});let extra=(state.extraClasses&&state.extraClasses[dk]||[]).map(x=>[x[0],x[1],x[2],true]);return base.concat(extra)}
+function sessionKey(dateKey,i){return dateKey+"-"+i}
+function statusOf(dateKey,i){return state.status[sessionKey(dateKey,i)]}
+function draftValue(k){return Object.prototype.hasOwnProperty.call(draftStatus,k)?draftStatus[k]:state.status[k]}
+function ensureDraft(dk){if(draftDate!==dk){draftDate=dk;draftStatus={}}}
+function setStatus(k,v){let dk=k.slice(0,10);if(!editable(dk))return;ensureDraft(dk);let current=draftValue(k);if(current===v){draftStatus[k]=null}else{draftStatus[k]=v}render()}
+function saveAttendance(dk){
+  if(!editable(dk))return;
+  ensureDraft(dk);
+  let changes=Object.keys(draftStatus);
+  if(!changes.length){toast("No attendance changes to save");return}
+  let past=parseKey(dk)<today();
+  if(!confirm(past?"Save this past date? After saving, this date will be permanently locked.":"Save the selected attendance for today?"))return;
+  state.records=state.records||{};
+  let ss=sessionsFor(parseKey(dk));
+  changes.forEach(k=>{let v=draftStatus[k],i=Number(k.slice(dk.length+1));if(v){state.status[k]=v;let x=ss[i];if(x)state.records[k]={subject:x[2],scheduled:x._scheduled||x[2],start:x[0],end:x[1]}}else{delete state.status[k];delete state.records[k]}});
+  if(past){state.finalizedDays=state.finalizedDays||{};state.finalizedDays[dk]=true}
+  save();draftStatus={};draftDate=dk;render();toast(past?"Attendance saved and permanently locked":"Attendance saved")
+}
+function toggleHoliday(dk){if(!editable(dk))return;state.holidays[dk]?delete state.holidays[dk]:state.holidays[dk]=true;save();render()}
+function setNote(dk,text){if(!editable(dk))return;if(text.trim())state.notes[dk]=text.trim();else delete state.notes[dk];save();toast("Note saved")}
+function rangeEnd(){return today()}
+function compute(filter="all"){let out={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0,holiday:0,subjects:{}};subjects().forEach(s=>out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0});let cur=new Date(START_DATE),end=rangeEnd();while(cur<=end){if(filter!=="all"&&key(cur).slice(0,7)!==filter){cur=add(cur,1);continue}let dk=key(cur),ss=sessionsFor(cur);if(ss.length){if(state.holidays[dk])out.holiday++;else ss.forEach((x,i)=>{let rec=state.records&&state.records[sessionKey(dk,i)],s=rec&&rec.subject?rec.subject:x[2],st=statusOf(dk,i);if(!out.subjects[s])out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0};out.total++;out.subjects[s].total++;if(st===STATUS.ATTENDED){out.attended++;out.subjects[s].attended++}else if(st===STATUS.ABSENT){out.absent++;out.subjects[s].absent++}else if(st===STATUS.LEAVE){out.leave++;out.subjects[s].leave++}else if(st===STATUS.NOT_HELD){out.notHeld++;out.subjects[s].notHeld++}else{out.pending++;out.subjects[s].pending++}})}cur=add(cur,1)}out.rows=Object.entries(out.subjects).map(([subject,x])=>{let held=x.attended+x.absent+x.leave,pct=held?x.attended/held*100:null;return {subject,...x,held,pct}});out.held=out.attended+out.absent+out.leave;out.percent=out.held?out.attended/out.held*100:null;return out}
+function dayProgress(d){let dk=key(d),ss=sessionsFor(d);if(state.holidays[dk])return {total:0,marked:0};let marked=ss.filter((_,i)=>!!statusOf(dk,i)).length;return {total:ss.length,marked}}
+function header(){return `<div class="header"><div class="brand">▣ Attendance</div><p class="sub">7 Sep 2026 onwards · ${esc(state.settings.course)}</p><p class="sub">Personal attendance tracker</p></div>`}
+function dateControls(){let d=parseKey(state.viewDate);return `<div class="card datebar"><button class="iconbtn" data-act="prev">‹</button><button data-act="pickDate" style="background:transparent;color:var(--ink);border:0" class="datecenter"><b>${DAYS[d.getDay()]}</b><span>${fmt(d)} · 📅</span></button><button class="iconbtn" data-act="next">›</button></div><div class="row" style="margin-bottom:10px"><button class="btn outline grow" data-act="dateInput">Choose date</button>${key(d)!==key(today())?`<button class="btn soft" data-act="today">Today</button>`:""}</div>`}
+function logTab(){
+  let d=parseKey(state.viewDate),dk=key(d),ss=sessionsFor(d),past=d<today(),future=d>today(),can=editable(dk),before=!past&&!future&&!can,isHoliday=!!state.holidays[dk],p=dayProgress(d),finalized=!!(state.finalizedDays&&state.finalizedDays[dk]);
+  let h=dateControls();
+  if(d<START_DATE)return h+`<div class="banner lock">🔒 Attendance tracking starts on 7 Sep 2026.</div>`;
+  if(ss.length)h+=`<div class="card progressCard"><div class="progressHead"><b>Day's progress</b><span class="progressText">${isHoliday?"Holiday":p.marked+" / "+p.total+" marked"}</span></div><div class="progress"><i style="width:${p.total?p.marked/p.total*100:0}%"></i></div></div>`;
+  if(before)h+=`<div class="banner warn">🕕 Logging opens at 6:00 AM.</div>`;
+  else if(future)h+=`<div class="banner lock">🔒 Future date — it becomes editable when that day arrives.</div>`;
+  else if(past&&finalized)h+=`<div class="banner lock">🔒 This past date was saved and is permanently locked.</div>`;
+  else if(past)h+=`<div class="banner info">✓ This past date has not been saved yet. You can enter attendance once; after saving it will be permanently locked.</div>`;
+  else h+=`<div class="banner info">✓ Today is editable until midnight.</div>`;
+  if(!ss.length)return h+`<div class="card formCard" style="text-align:center;color:var(--soft)">No classes scheduled — Sunday.</div>`;
+  h+=`<button class="holiday" data-act="holiday" ${can?"":"disabled"}>${isHoliday?"🏖 Marked as holiday"+(can?" — tap to undo":""):can?"🏖 Mark whole day as holiday":"🔒 Not a holiday"}</button>`;
+  if(!isHoliday){
+    ss.forEach((s,i)=>{let cur=draftValue(sessionKey(dk,i)),locked=can?"":"disabled",changed=s._scheduled&&s._scheduled!==s[2];h+=`<div class="card session"><div class="sessionTop"><div><div class="sessionName">${esc(s[2])}${changed?" 🔄":""}</div>${changed?`<div class="small">Scheduled: ${esc(s._scheduled)}</div>`:""}<div class="sessionTime">${time(s[0])} – ${time(s[1])}</div></div><div>${can?`<button class="btn outline" style="padding:7px 9px;font-size:11px" data-act="editClass" data-i="${i}">✏️ Edit</button>`:`<div class="locktag">${future?"🔒 Future":past?"🔒 Locked":"🕕 Opens later"}</div>`}</div></div><div class="statusRow"><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="attended" class="status green ${cur==="attended"?"active":""}">✓<br>Present</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="absent" class="status red ${cur==="absent"?"active":""}">✕<br>Absent</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="not_held" class="status gray ${cur==="not_held"?"active":""}">⊘<br>Not held</button></div></div>`});
+    if(can){h+=`<button class="btn outline" style="width:100%;margin-top:8px" data-act="addExtra">＋ Add extra class</button>`;if(Object.keys(draftStatus).length)h+=`<button class="saveAttendance" data-act="saveAttendance">💾 Save attendance${past?" & lock date":""}</button>`}
+    h+=`<div class="card noteBox"><h3>📝 Note for this day</h3><textarea id="dayNote" ${can?"":"disabled"} placeholder="Optional note...">${esc(state.notes[dk]||"")}</textarea>${can?`<div style="margin-top:8px"><button class="btn soft" data-act="saveNote">Save note</button></div>`:""}</div>`
+  }else h+=`<div class="card formCard" style="text-align:center">🏖 Classes are excluded from attendance calculations for this holiday.</div>`;
+  return h
+}
+function combinedALCRows(st,filter="all"){
+  // Flexible combined attendance:
+  // Build combinations ONLY from classes that were actually saved, not from the weekly timetable.
+  // Any subject can qualify: if the same subject has a held class before lunch and another
+  // held class after lunch, it gets a combined card. The subject name itself does not matter.
+  const groups=new Map();
+  const records=state.records||{};
+  Object.entries(records).forEach(([recordKey,rec])=>{
+    const dk=String(recordKey).slice(0,10);
+    if(filter!=="all" && dk.slice(0,7)!==filter)return;
+    const status=state.status[recordKey];
+    // A combination represents classes that actually happened. Ignore pending and Not Held.
+    if(status!==STATUS.ATTENDED && status!==STATUS.ABSENT && status!==STATUS.LEAVE)return;
+    const subject=String(rec&&rec.subject||"").trim();
+    const start=String(rec&&rec.start||"");
+    if(!subject || /\(Clinical\)$/.test(subject))return;
+    const base=subjectBase(subject);
+    if(!base)return;
+    const period=start>="15:00"?"after":"before";
+    let g=groups.get(base);
+    if(!g){
+      g={before:{attended:0,absent:0,leave:0},after:{attended:0,absent:0,leave:0}};
+      groups.set(base,g);
+    }
+    const bucket=g[period];
+    if(status===STATUS.ATTENDED)bucket.attended++;
+    else if(status===STATUS.ABSENT)bucket.absent++;
+    else if(status===STATUS.LEAVE)bucket.leave++;
+  });
 
-/* ---------------- theme ---------------- */
-var THEME = {
-  bg: "#F5F6F4", card: "#FFFFFF", ink: "#1C2333", inkSoft: "#5B6472",
-  hairline: "#E2E4E0", primary: "#2A5C54", primarySoft: "#E4EFEC",
-  attended: "#2F8F5B", attendedSoft: "#E4F4EA",
-  absent: "#C1503D", absentSoft: "#FBE9E5",
-  notHeld: "#8A7B4F", notHeldSoft: "#F2EEE0",
-  holiday: "#6E5CA6", holidaySoft: "#EDE8F6",
-  pending: "#B7BCC4"
-};
-var DAY_COLOR = { 1: "#4F86B8", 2: "#C98A3E", 3: "#3F9B5E", 4: "#8A6BC1", 5: "#5B5B5B", 6: "#B14E6F" };
-var DAY_NAMES_LONG = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-
-/* ---------------- schedule ---------------- */
-var SCHEDULE = {
-  1: [["09:00","10:00","General Medicine"],["10:00","11:00","OBG"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Medicine"]],
-  2: [["09:00","10:00","General Medicine"],["10:00","11:00","General Surgery"],["11:00","14:00","Clinical Posting"],["15:00","17:00","OBG"]],
-  3: [["09:00","10:00","General Surgery"],["10:00","11:00","Pediatrics"],["11:00","14:00","Clinical Posting"],["15:00","17:00","General Surgery"]],
-  4: [["09:00","10:00","ENT"],["10:00","11:00","Psychiatry"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Resp. Medicine / Radiodiagnosis"],["16:00","17:00","Pediatrics / Anesthesia"]],
-  5: [["09:00","10:00","EYE"],["10:00","11:00","Dermatology"],["11:00","14:00","Clinical Posting"],["15:00","16:00","Orthopedics / OBG"],["16:00","17:00","General Medicine"]],
-  6: [["09:00","10:00","OBG"],["10:00","11:00","Orthopedics"],["11:00","12:00","General Surgery"],["12:00","14:00","AETCOM / Pandemic Module"],["15:00","17:00","Monthly Assessment"]]
-};
-var START_DATE = new Date(2026, 8, 7);
-var END_DATE = new Date(2027, 8, 7);
-var ALL_SUBJECTS = (function () {
-  var seen = {}, list = [];
-  Object.keys(SCHEDULE).forEach(function (wd) {
-    SCHEDULE[wd].forEach(function (s) {
-      if (!seen[s[2]]) { seen[s[2]] = true; list.push(s[2]); }
+  return [...groups.entries()]
+    .filter(([,g])=>{
+      const beforeHeld=g.before.attended+g.before.absent+g.before.leave;
+      const afterHeld=g.after.attended+g.after.absent+g.after.leave;
+      return beforeHeld>0 && afterHeld>0;
+    })
+    .sort(([a],[b])=>a.localeCompare(b))
+    .map(([base,g])=>{
+      const attended=g.before.attended+g.after.attended;
+      const absent=g.before.absent+g.after.absent;
+      const leave=g.before.leave+g.after.leave;
+      const held=attended+absent+leave;
+      return {
+        subject:base+" — Morning + After-Lunch",
+        attended,absent,leave,held,
+        pct:held?attended/held*100:null,
+        combined:true
+      };
     });
-  });
-  return list;
-})();
+}
+function statsCard(r,label=""){let cls=r.pct===null?"":r.pct>=state.settings.required?"safe":r.pct>=state.settings.required-5?"warning":"danger";return `<div class="card subject"><div class="subjectHead"><div class="subjectName">${esc(r.subject)}${label}</div><div class="pct ${cls}">${r.pct===null?"—":r.pct.toFixed(1)+"%"}</div></div><div class="bar"><i style="width:${r.pct||0}%"></i></div><div class="subjectMeta"><span>Present ${r.attended} · Absent ${r.absent}</span><span>Held ${r.held}</span></div></div>`}
+function statsTab(){let filter=state.statsFilter,st=compute(filter),pct=st.percent===null?0:Math.min(100,st.percent),months=[];let c=new Date(START_DATE.getFullYear(),START_DATE.getMonth(),1),e=new Date(today().getFullYear(),today().getMonth(),1);while(c<=e){months.push(key(c).slice(0,7));c=new Date(c.getFullYear(),c.getMonth()+1,1)}let h=`<div class="tabs"><button class="filter ${filter==="all"?"active":""}" data-act="filter" data-v="all">Overall</button>${months.slice().reverse().map(m=>`<button class="filter ${filter===m?"active":""}" data-act="filter" data-v="${m}">${parseKey(m+"-01").toLocaleDateString("en-GB",{month:"short",year:"2-digit"})}</button>`).join("")}</div><div class="card statsHero"><div class="ring" style="--p:${pct}%"><div class="ringIn">${st.percent===null?"—":st.percent.toFixed(1)+"%"}</div></div><b>Overall attendance</b><div class="small">${st.attended} present of ${st.held} held classes</div></div><div class="grid4"><div class="card metric"><b>${st.attended}</b><span>Present</span></div><div class="card metric"><b>${st.absent}</b><span>Absent</span></div><div class="card metric"><b>${st.pending}</b><span>Pending</span></div></div><div class="sectionTitle">📚 Subject attendance</div>`;
+// Individual subjects only — combined rows are deliberately kept out of this section.
+st.rows.forEach(r=>h+=statsCard(r));
+// Flexible combinations from actually saved classes get their own separate section.
+let combined=combinedALCRows(st,filter);
+if(combined.length){h+=`<div class="sectionTitle">🔗 Combined Morning & After-Lunch Attendance</div><div class="small" style="margin:-4px 0 10px">Shown automatically when the same subject has actually been held both before and after lunch.</div>`;combined.forEach(r=>h+=statsCard(r," 🔗"))}
+return h}
+function calendarTab(){let m=parseKey(state.calendarMonth),y=m.getFullYear(),mo=m.getMonth(),first=new Date(y,mo,1),start=first.getDay(),days=new Date(y,mo+1,0).getDate();let h=`<div class="card calendar"><div class="row" style="justify-content:space-between;margin-bottom:10px"><button class="btn outline" data-act="calPrev">‹</button><b>${monthFmt(first)}</b><button class="btn outline" data-act="calNext">›</button></div><div class="calGrid">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<div class="calDow">${x}</div>`).join("")}${Array.from({length:start},()=>`<div class="calDay empty"></div>`).join("")}`;for(let n=1;n<=days;n++){let d=new Date(y,mo,n),dk=key(d),ss=sessionsFor(d),dot="";if(state.holidays[dk])dot="holiday";else if(ss.length){let vals=ss.map((_,i)=>statusOf(dk,i));if(vals.some(v=>v===STATUS.ABSENT||v===STATUS.LEAVE))dot=vals.some(v=>v===STATUS.ATTENDED)?"mix":"bad";else if(vals.some(v=>v===STATUS.ATTENDED))dot="good"}h+=`<button class="calDay ${dk===key(today())?"today":""}" data-act="calPick" data-v="${dk}">${n}${dot?`<i class="dot ${dot}"></i>`:""}</button>`}h+=`</div></div><div class="banner info">🟢 Present · 🔴 Absent · 🟡 Mixed · 🟣 Holiday. Tap a date to open its log.</div>`;return h}
+function settingsTab(){let s=state.settings;return `<div class="card formCard"><b>⚙️ Settings</b><label class="label">Name</label><input id="setName" class="input" value="${esc(s.name)}"><label class="label">Course / Academic part</label><input id="setCourse" class="input" value="${esc(s.course)}"><label class="label">Minimum required attendance (%)</label><input id="setRequired" class="input" type="number" min="1" max="100" value="${s.required}"><p class="small" style="margin-top:12px">🔒 Attendance logging time is fixed at 6:00 AM and cannot be changed.</p><label class="label">Clinical Posting Roll Number</label>${s.rollLocked&&s.rollNumber?`<div class="input" style="display:flex;align-items:center;justify-content:space-between"><b>${esc(s.rollNumber)}</b><span>🔒 Permanently locked</span></div><p class="small">Your roll number is permanently saved and cannot be changed.</p>`:`<input id="setRoll" class="input" type="number" min="1" max="100" value="${esc(s.rollNumber||"")}" placeholder="Enter your roll number (1–100)"><p class="small">⚠️ Check carefully. Once saved, your roll number will be permanently locked.</p>`}<p class="small">The app automatically switches to the new roll-number group arrangement from 9 Aug 2027.</p><label class="label">Appearance</label><select id="setTheme" class="input"><option value="system" ${s.theme==="system"?"selected":""}>System default</option><option value="light" ${s.theme==="light"?"selected":""}>Light</option><option value="dark" ${s.theme==="dark"?"selected":""}>Dark</option></select><div style="margin-top:14px"><button class="btn" data-act="saveSettings">Save settings</button></div></div><div class="card formCard"><b>📚 Schedule</b><p class="small">Schedule changes apply to new/unsaved classes. Saved attendance keeps its original subject permanently for accurate history and statistics.</p><button class="btn outline" type="button" onclick="openManageSchedule()">Manage schedule</button></div><p class="small" style="text-align:center">Tracking starts on 7 Sep 2026 and continues indefinitely.</p>`}
+function scheduleModal(){let s=state.settings.schedule;let body=`<div class="modal" data-act="closeModal"><div class="modalBox" onclick="event.stopPropagation()"><div class="row" style="justify-content:space-between"><b>Manage weekly schedule</b><button class="btn outline" data-act="closeModal">Close</button></div><p class="small">Edit times and subjects. Changes affect new/unsaved classes only; already saved attendance keeps its original class snapshot.</p>`;for(let day=1;day<=6;day++){body+=`<div class="formCard card"><b>${DAYS[day]}</b><div id="sch${day}">${(s[day]||[]).map((x,i)=>scheduleRow(day,i,x)).join("")}</div><button class="btn soft" data-act="addSession" data-day="${day}">+ Add class</button></div>`}body+=`<div class="row"><button class="btn grow" data-act="saveSchedule">Save schedule</button><button class="btn outline" data-act="closeModal">Cancel</button></div></div></div>`;document.body.insertAdjacentHTML("beforeend",body)}
+function scheduleSubjectSelect(selected){let known=SUBJECT_LIST.includes(selected);let opts=SUBJECT_LIST.map(v=>`<option value="${esc(v)}" ${v===selected?"selected":""}>${esc(v)}</option>`).join("");return `<div class="grow schSubjectWrap"><select class="input schSubject">${known?"":`<option value="__OTHER__" selected>Other (custom)</option>`}${opts}<option value="__OTHER__" ${known?"":"selected"}>Other (type manually)</option></select><input class="input schOther ${known?"hidden":""}" style="margin-top:6px" value="${known?"":esc(selected)}" placeholder="Type subject carefully"></div>`}
+function scheduleRow(day,i,x){return `<div class="row schRow" style="margin:8px 0"><input class="input schStart" style="width:82px" type="time" value="${x[0]}"><input class="input schEnd" style="width:82px" type="time" value="${x[1]}">${scheduleSubjectSelect(x[2])}<button class="btn outline" data-act="removeSession" data-day="${day}">×</button></div>`}
+function footer(){return `<div class="madeby">Made By Sharad Sourav</div>`}
+function bottom(){let items=[["log","▣","Log"],["stats","▥","Stats"],["settings","⚙","Settings"]];return `<div class="nav">${items.map(x=>`<button class="${state.tab===x[0]?"active":""}" data-act="tab" data-v="${x[0]}"><b>${x[1]}</b>${x[2]}</button>`).join("")}</div>`}
+function render(){applyTheme();let content=state.tab==="log"?logTab():state.tab==="stats"?statsTab():state.tab==="calendar"?calendarTab():settingsTab();document.getElementById("app").innerHTML=`<div class="app">${header()}<main class="container">${content}${footer()}</main>${bottom()}</div>`}
+function toast(msg){let old=document.querySelector(".toast");if(old)old.remove();let x=document.createElement("div");x.className="toast";x.textContent=msg;document.body.appendChild(x);setTimeout(()=>x.remove(),2200)}
+function datePicker(){
+  // Use a visible date control inside a modal. Some Android WebViews (including
+  // certain AppGeyser builds) do not open a programmatically-clicked hidden date input.
+  const modal=document.createElement("div");
+  modal.className="modal";
+  modal.innerHTML=`<div class="modalBox" role="dialog" aria-modal="true">
+    <h2 style="margin:0 0 14px;font-size:19px">Choose date</h2>
+    <label class="label" for="pickerDate">Attendance date</label>
+    <input id="pickerDate" class="input" type="date" min="${key(START_DATE)}" value="${state.viewDate}">
+    <div class="row" style="margin-top:16px;justify-content:flex-end">
+      <button class="btn outline" data-act="closeModal">Cancel</button>
+      <button class="btn" data-act="confirmDate">Open date</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+document.addEventListener("click",e=>{let el=e.target.closest("[data-act]");if(!el)return;let a=el.dataset.act;if(a==="tab"){draftDate=null;draftStatus={};state.tab=el.dataset.v;save();render()}else if(a==="prev"){draftDate=null;draftStatus={};let d=add(parseKey(state.viewDate),-1);state.viewDate=key(d<START_DATE?START_DATE:d);save();render()}else if(a==="next"){draftDate=null;draftStatus={};state.viewDate=key(add(parseKey(state.viewDate),1));save();render()}else if(a==="today"){draftDate=null;draftStatus={};state.viewDate=key(today());save();render()}else if(a==="pickDate"||a==="dateInput")datePicker();else if(a==="confirmDate"){let inp=document.getElementById("pickerDate");if(inp&&inp.value){draftDate=null;draftStatus={};state.viewDate=inp.value;state.tab="log";save();document.querySelectorAll(".modal").forEach(m=>m.remove());render()}}else if(a==="status")setStatus(el.dataset.k,el.dataset.v);else if(a==="saveAttendance")saveAttendance(state.viewDate);else if(a==="holiday")toggleHoliday(state.viewDate);else if(a==="saveNote")setNote(state.viewDate,document.getElementById("dayNote").value);else if(a==="editClass")classModal(Number(el.dataset.i));else if(a==="addExtra")extraModal();else if(a==="saveClassEdit"){let i=Number(el.dataset.i),dk=state.viewDate,base=(state.settings.schedule[parseKey(dk).getDay()]||[]).length,sub=selectedSubject(),st=document.getElementById("actualStart").value,en=document.getElementById("actualEnd").value;if(!sub||!st||!en){toast("Enter subject and times");return}if(i<base){state.overrides[dk]=state.overrides[dk]||{};state.overrides[dk][i]={subject:sub,start:st,end:en}}else{let j=i-base;state.extraClasses[dk][j]=[st,en,sub]}save();document.querySelectorAll(".modal").forEach(m=>m.remove());render();toast("Actual class saved")}else if(a==="restoreClass"){let dk=state.viewDate,i=Number(el.dataset.i);if(state.overrides[dk])delete state.overrides[dk][i];save();document.querySelectorAll(".modal").forEach(m=>m.remove());render();toast("Scheduled class restored")}else if(a==="saveExtra"){let dk=state.viewDate,sub=selectedSubject(),st=document.getElementById("extraStart").value,en=document.getElementById("extraEnd").value;if(!sub||!st||!en){toast("Enter subject and times");return}state.extraClasses[dk]=state.extraClasses[dk]||[];state.extraClasses[dk].push([st,en,sub]);save();document.querySelectorAll(".modal").forEach(m=>m.remove());render();toast("Extra class added")}else if(a==="removeExtra"){let dk=state.viewDate,i=Number(el.dataset.i),base=(state.settings.schedule[parseKey(dk).getDay()]||[]).length;state.extraClasses[dk].splice(i-base,1);save();document.querySelectorAll(".modal").forEach(m=>m.remove());render();toast("Extra class removed");}else if(a==="filter"){state.statsFilter=el.dataset.v;render()}else if(a==="calPrev"){let d=parseKey(state.calendarMonth);state.calendarMonth=key(new Date(d.getFullYear(),d.getMonth()-1,1));save();render()}else if(a==="calNext"){let d=parseKey(state.calendarMonth);state.calendarMonth=key(new Date(d.getFullYear(),d.getMonth()+1,1));save();render()}else if(a==="calPick"){draftDate=null;draftStatus={};state.viewDate=el.dataset.v;state.tab="log";save();render()}else if(a==="saveSettings"){state.settings.name=document.getElementById("setName").value.trim()||"Student";state.settings.course=document.getElementById("setCourse").value.trim()||"Course";state.settings.required=Math.max(1,Math.min(100,Number(document.getElementById("setRequired").value)||75));state.settings.unlockHour=6;let rollInput=document.getElementById("setRoll");if(rollInput&&!state.settings.rollLocked){let rn=rollInput.value.trim();if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(rn)){toast("Enter a valid roll number (1–100)");return}if(!confirm("Confirm roll number "+rn+"? Once saved, it cannot be changed."))return;state.settings.rollNumber=rn;state.settings.rollLocked=true}state.settings.theme=document.getElementById("setTheme").value;save();applyTheme();render();toast("Settings saved")}else if(a==="schedule")scheduleModal();else if(a==="closeModal"){document.querySelectorAll(".modal").forEach(m=>m.remove())}else if(a==="addSession"){let box=document.getElementById("sch"+el.dataset.day),i=box.children.length;box.insertAdjacentHTML("beforeend",scheduleRow(el.dataset.day,i,["09:00","10:00","New Subject"]))}else if(a==="removeSession"){el.parentElement.remove()}else if(a==="saveSchedule"){let ns={};for(let day=1;day<=6;day++){ns[day]=[...document.querySelectorAll("#sch"+day+" > .schRow")].map(r=>{let sub=r.querySelector(".schSubject").value;if(sub==="__OTHER__")sub=r.querySelector(".schOther").value.trim();return [r.querySelector(".schStart").value,r.querySelector(".schEnd").value,sub]}).filter(x=>x[0]&&x[1]&&x[2])}state.settings.schedule=ns;save();document.querySelectorAll(".modal").forEach(m=>m.remove());render();toast("Schedule saved and will be used for future unsaved classes")}});
 
-/* ---------------- date helpers ---------------- */
-function pad2(n) { return String(n).padStart(2, "0"); }
-function dkey(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
-function addDays(d, n) { var nd = new Date(d); nd.setDate(nd.getDate() + n); return nd; }
-function clampToRange(d) { if (d < START_DATE) return new Date(START_DATE); if (d > END_DATE) return new Date(END_DATE); return d; }
-function fmtTime(hhmm) {
-  var parts = hhmm.split(":"); var h = Number(parts[0]), m = Number(parts[1]);
-  var ap = h >= 12 ? "PM" : "AM"; var h12 = h % 12 === 0 ? 12 : h % 12;
-  return h12 + ":" + pad2(m) + " " + ap;
-}
-function fmtDateLong(d) { return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
-function realToday() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
-function todayClamped() { return clampToRange(realToday()); }
-function startOfDay(d) { var nd = new Date(d); nd.setHours(0, 0, 0, 0); return nd; }
-var UNLOCK_HOUR = 6;
-function isNowPastUnlock() { return new Date().getHours() >= UNLOCK_HOUR; }
-function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function checkDay(){let cur=key(today());if(state.viewDate<key(START_DATE))state.viewDate=key(START_DATE);render()}document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkDay()});window.addEventListener("focus",checkDay);setInterval(checkDay,60000);load();applyTheme();watchSystemTheme();render();if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
-var STATUS = { ATTENDED: "attended", ABSENT: "absent", NOT_HELD: "not_held" };
-var STORAGE_KEY = "attendance-tracker-data-v1";
-
-/* ---------------- tiny inline icons (plain SVG strings) ---------------- */
-function icon(inner, size, color, sw) {
-  size = size || 16; color = color || "currentColor"; sw = sw || 2;
-  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + color +
-    '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round" style="display:block">' + inner + '</svg>';
-}
-var ICONS = {
-  chevronLeft: function (size, color) { return icon('<polyline points="15 18 9 12 15 6"/>', size, color); },
-  chevronRight: function (size, color) { return icon('<polyline points="9 18 15 12 9 6"/>', size, color); },
-  check: function (size, color) { return icon('<polyline points="20 6 9 17 4 12"/>', size, color, 2.4); },
-  x: function (size, color) { return icon('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', size, color, 2.4); },
-  ban: function (size, color) { return icon('<circle cx="12" cy="12" r="9"/><line x1="6" y1="18" x2="18" y2="6"/>', size, color, 2.4); },
-  lock: function (size, color) { return icon('<rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>', size, color); },
-  clock: function (size, color) { return icon('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>', size, color); },
-  clipboard: function (size, color, sw) { return icon('<rect x="5" y="4" width="14" height="17" rx="2"/><rect x="9" y="2" width="6" height="4" rx="1"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="16" y2="14"/>', size, color, sw); },
-  bar: function (size, color, sw) { return icon('<line x1="5" y1="21" x2="5" y2="10"/><line x1="12" y1="21" x2="12" y2="4"/><line x1="19" y1="21" x2="19" y2="14"/>', size, color, sw); },
-  reset: function (size, color) { return icon('<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-9.36L1 10"/>', size, color); },
-  party: function (size, color) { return icon('<path d="M5.8 11.3 2 22l10.7-3.8"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-4.6 4.6"/><path d="M18.4 8.4 22 12"/><path d="m9 12 3-3 3 3-3 3z"/>', size, color); }
-};
-
-/* ---------------- state ---------------- */
-var state = {
-  status: {},
-  holidays: {},
-  tab: "log",
-  viewDate: todayClamped(),
-  confirmReset: false,
-  knownToday: dkey(realToday())
-};
-
-function loadState() {
-  try {
-    var raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      state.status = parsed.status || {};
-      state.holidays = parsed.holidays || {};
-    }
-  } catch (e) { /* first run */ }
-}
-function persist() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ status: state.status, holidays: state.holidays }));
-  } catch (e) { /* storage unavailable */ }
-}
-
-function isDateEditable(dateKey) {
-  return dateKey === dkey(realToday()) && isNowPastUnlock();
-}
-function setSessionStatus(sKey, value) {
-  var dateKey = sKey.slice(0, 10);
-  if (!isDateEditable(dateKey)) return;
-  if (state.status[sKey] === value) delete state.status[sKey]; else state.status[sKey] = value;
-  persist(); render();
-}
-function toggleHoliday(dkeyStr) {
-  if (!isDateEditable(dkeyStr)) return;
-  if (state.holidays[dkeyStr]) delete state.holidays[dkeyStr]; else state.holidays[dkeyStr] = true;
-  persist(); render();
-}
-function resetAll() {
-  state.status = {}; state.holidays = {};
-  persist();
-  state.confirmReset = false;
-  render();
-}
-
-/* ---------------- stats ---------------- */
-function computeStats() {
-  var attended = 0, absent = 0, notHeld = 0, pending = 0, total = 0, holidayCount = 0;
-  var bySubject = {};
-  ALL_SUBJECTS.forEach(function (s) { bySubject[s] = { attended: 0, absent: 0, notHeld: 0, pending: 0, total: 0 }; });
-  var cursor = new Date(START_DATE);
-  var seen = {};
-  while (cursor <= END_DATE) {
-    var wd = cursor.getDay();
-    var key = dkey(cursor);
-    var sessions = SCHEDULE[wd] || [];
-    if (sessions.length) {
-      if (state.holidays[key]) {
-        if (!seen[key]) { holidayCount++; seen[key] = true; }
-      } else {
-        sessions.forEach(function (sess, idx) {
-          var subj = sess[2], sKey = key + "-" + idx, st = state.status[sKey];
-          total++; bySubject[subj].total++;
-          if (st === STATUS.ATTENDED) { attended++; bySubject[subj].attended++; }
-          else if (st === STATUS.ABSENT) { absent++; bySubject[subj].absent++; }
-          else if (st === STATUS.NOT_HELD) { notHeld++; bySubject[subj].notHeld++; }
-          else { pending++; bySubject[subj].pending++; }
-        });
-      }
-    }
-    cursor = addDays(cursor, 1);
+// Robust Manage Schedule controls (direct handlers; independent of delegated clicks)
+function openManageSchedule(){
+  document.querySelectorAll('.modal').forEach(m=>m.remove());
+  const s=state.settings.schedule||{};
+  let html='<div class="modal" id="manageScheduleModal"><div class="modalBox">'
+    +'<div class="row" style="justify-content:space-between"><b>Manage weekly schedule</b><button type="button" class="btn outline" onclick="closeManageSchedule()">Close</button></div>'
+    +'<p class="small">Edit your timetable. Saved attendance is never changed. The updated schedule is used for future and unsaved classes.</p>';
+  for(let day=1;day<=6;day++){
+    html+='<div class="formCard card"><b>'+DAYS[day]+'</b><div id="freshSch'+day+'">';
+    (s[day]||[]).forEach((x,i)=>html+=freshScheduleRow(day,i,x));
+    html+='</div><button type="button" class="btn soft" onclick="addFreshScheduleRow('+day+')">+ Add class</button></div>';
   }
-  var marked = attended + absent;
-  var percent = marked > 0 ? (attended / marked) * 100 : null;
-  var subjectRows = ALL_SUBJECTS.map(function (s) {
-    var d = bySubject[s]; var m = d.attended + d.absent;
-    return { subject: s, attended: d.attended, absent: d.absent, notHeld: d.notHeld, pending: d.pending, total: d.total, percent: m > 0 ? Math.round((d.attended / m) * 100) : null };
-  });
-  return { attended: attended, absent: absent, notHeld: notHeld, pending: pending, total: total, holidayCount: holidayCount, percent: percent, subjectRows: subjectRows };
+  html+='<div class="row"><button type="button" class="btn grow" onclick="saveManageSchedule()">Save schedule</button><button type="button" class="btn outline" onclick="closeManageSchedule()">Cancel</button></div></div></div>';
+  document.body.insertAdjacentHTML('beforeend',html);
 }
-
-/* ---------------- render: header / nav ---------------- */
-function renderHeader() {
-  return '' +
-    '<div style="padding:20px 16px 12px;background:' + THEME.bg + ';position:sticky;top:0;z-index:10">' +
-      '<div style="display:flex;align-items:center;gap:8px">' +
-        ICONS.clipboard(20, THEME.primary) +
-        '<h1 class="sg" style="font-size:18px;color:' + THEME.ink + ';margin:0">Attendance</h1>' +
-      '</div>' +
-      '<p style="font-size:12px;margin:2px 0 0;color:' + THEME.inkSoft + '">7 Sep 2026 – 7 Sep 2027 · 3rd Prof Part-II</p>' +
-      '<p style="font-size:10.5px;margin:3px 0 0;color:' + THEME.pending + '">Made by Sharad Sourav — for personal use</p>' +
-    '</div>';
+function freshScheduleRow(day,i,x){
+  const opts=SUBJECT_LIST.map(v=>'<option value="'+esc(v)+'" '+(v===x[2]?'selected':'')+'>'+esc(v)+'</option>').join('')+'<option value="__OTHER__" '+(!SUBJECT_LIST.includes(x[2])?'selected':'')+'>Other (type manually)</option>';
+  const other=SUBJECT_LIST.includes(x[2])?'':'<input class="input freshOther" value="'+esc(x[2])+'" placeholder="Other subject">';
+  return '<div class="freshSchRow" style="margin:8px 0;display:flex;gap:6px;align-items:center;flex-wrap:wrap">'
+    +'<input class="input freshStart" style="width:110px" type="time" value="'+esc(x[0])+'">'
+    +'<input class="input freshEnd" style="width:110px" type="time" value="'+esc(x[1])+'">'
+    +'<select class="input freshSubject" style="flex:1;min-width:180px" onchange="freshOtherToggle(this)">'+opts+'</select>'+other
+    +'<button type="button" class="btn outline" onclick="this.closest(&quot;.freshSchRow&quot;).remove()">×</button></div>';
 }
-function renderBottomNav() {
-  var items = [
-    { id: "log", label: "Log", i: ICONS.clipboard },
-    { id: "stats", label: "Stats", i: ICONS.bar }
-  ];
-  return '<div style="position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;border-top:1px solid ' + THEME.hairline + ';background:' + THEME.card + '">' +
-    items.map(function (it) {
-      var active = state.tab === it.id;
-      var color = active ? THEME.primary : THEME.inkSoft;
-      return '<button data-act="tab" data-tab="' + it.id + '" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 24px;font-size:12px;color:' + color + '">' +
-        it.i(20, color, active ? 2.4 : 1.8) + it.label + '</button>';
-    }).join("") +
-    '</div>';
+function freshOtherToggle(sel){
+  const row=sel.closest('.freshSchRow'); let old=row.querySelector('.freshOther');
+  if(sel.value==='__OTHER__'&&!old){sel.insertAdjacentHTML('afterend','<input class="input freshOther" placeholder="Other subject">');}
+  if(sel.value!=='__OTHER__'&&old)old.remove();
 }
-
-/* ---------------- render: log tab ---------------- */
-function renderLogTab() {
-  var vd = state.viewDate;
-  var key = dkey(vd);
-  var wd = vd.getDay();
-  var sessions = SCHEDULE[wd] || [];
-  var isHoliday = !!state.holidays[key];
-  var outOfRange = vd < START_DATE || vd > END_DATE;
-  var accent = DAY_COLOR[wd] || THEME.inkSoft;
-  var today0 = realToday(), view0 = startOfDay(vd);
-  var isPast = view0 < today0, isFuture = view0 > today0;
-  var isToday = !isPast && !isFuture;
-  var beforeUnlock = isToday && !isNowPastUnlock();
-  var isEditable = isToday && !beforeUnlock && !outOfRange;
-
-  var html = '<div style="padding:0 16px">';
-
-  html += '<div style="border-radius:10px;display:flex;align-items:center;justify-content:space-between;padding:8px;margin-bottom:12px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
-    '<button data-act="prevday" style="padding:8px">' + ICONS.chevronLeft(18, THEME.ink) + '</button>' +
-    '<div style="display:flex;flex-direction:column;align-items:center">' +
-      '<span class="sg" style="font-size:14px;color:' + THEME.ink + '">' + DAY_NAMES_LONG[wd] + '</span>' +
-      '<span style="font-size:12px;color:' + THEME.inkSoft + '">' + fmtDateLong(vd) + '</span>' +
-    '</div>' +
-    '<button data-act="nextday" style="padding:8px">' + ICONS.chevronRight(18, THEME.ink) + '</button>' +
-  '</div>';
-
-  html += '<div style="display:flex;gap:8px;margin-bottom:12px">' +
-    '<input type="date" data-act="datepick" value="' + key + '" min="' + dkey(START_DATE) + '" max="' + dkey(END_DATE) + '" ' +
-      'style="font-size:12px;padding:7px 8px;border-radius:8px;flex:1;border:1px solid ' + THEME.hairline + ';color:' + THEME.ink + ';background:' + THEME.card + '" />' +
-    '<button data-act="goToday" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.primarySoft + ';color:' + THEME.primary + '">Today</button>' +
-  '</div>';
-
-  if (!outOfRange && sessions.length > 0) {
-    if (beforeUnlock) {
-      html += bannerHtml(ICONS.clock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "Today, but logging opens at 6:00 AM.");
-    } else if (isToday) {
-      html += bannerHtml(ICONS.clock(12, THEME.primary), THEME.primarySoft, THEME.primary, "Today — editable until midnight, then it locks in for good.");
-    } else if (isPast) {
-      html += bannerHtml(ICONS.lock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "This day has passed — entries are locked and can't be changed.");
-    } else {
-      html += bannerHtml(ICONS.lock(12, THEME.notHeld), THEME.notHeldSoft, THEME.notHeld, "This day hasn't happened yet — come back on the day to log it.");
-    }
+function addFreshScheduleRow(day){document.getElementById('freshSch'+day).insertAdjacentHTML('beforeend',freshScheduleRow(day,0,['09:00','10:00',SUBJECT_LIST[0]]));}
+function closeManageSchedule(){const m=document.getElementById('manageScheduleModal');if(m)m.remove();}
+function saveManageSchedule(){
+  const ns={};
+  for(let day=1;day<=6;day++){
+    ns[day]=[...document.querySelectorAll('#freshSch'+day+' .freshSchRow')].map(r=>{
+      const subSel=r.querySelector('.freshSubject');
+      const sub=subSel.value==='__OTHER__'?(r.querySelector('.freshOther')?.value.trim()||''):subSel.value;
+      return [r.querySelector('.freshStart').value,r.querySelector('.freshEnd').value,sub];
+    }).filter(x=>x[0]&&x[1]&&x[2]);
   }
-
-  if (outOfRange) {
-    html += '<p style="font-size:14px;text-align:center;padding:32px 0;color:' + THEME.inkSoft + '">Outside the tracked range (7 Sep 2026 – 7 Sep 2027).</p>';
-  } else if (sessions.length === 0) {
-    html += '<p style="font-size:14px;text-align:center;padding:32px 0;color:' + THEME.inkSoft + '">No classes scheduled — Sunday.</p>';
-  } else {
-    var holidayLabel = isHoliday
-      ? (isEditable ? "Marked as holiday — tap to unmark" : "Marked as holiday")
-      : (isEditable ? "Mark whole day as holiday" : "Not a holiday");
-    html += '<button data-act="' + (isEditable ? "toggleholiday" : "noop") + '" data-key="' + key + '" ' +
-      'style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:9px 0;margin-bottom:12px;font-size:14px;font-weight:500;' +
-      'background:' + (isHoliday ? THEME.holiday : THEME.holidaySoft) + ';color:' + (isHoliday ? "#FFFFFF" : THEME.holiday) + ';' +
-      'opacity:' + (isEditable ? 1 : (isHoliday ? 1 : 0.6)) + '">' +
-      (isEditable ? ICONS.party(16) : ICONS.lock(13)) + holidayLabel + '</button>';
-
-    if (!isHoliday) {
-      sessions.forEach(function (sess, idx) {
-        var sKey = key + "-" + idx;
-        var cur = state.status[sKey];
-        html += '<div style="border-radius:10px;margin-bottom:8px;padding:10px 12px;background:' + THEME.card +
-          ';border:1px solid ' + THEME.hairline + ';border-left-width:3px;border-left-color:' + accent + ';border-left-style:solid;opacity:' + (isEditable ? 1 : 0.85) + '">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">' +
-            '<div><div style="font-size:14px;font-weight:500;color:' + THEME.ink + '">' + esc(sess[2]) + '</div>' +
-              '<div style="font-size:12px;color:' + THEME.inkSoft + '">' + fmtTime(sess[0]) + ' – ' + fmtTime(sess[1]) + '</div></div>';
-        if (!isEditable) {
-          var tag = isPast ? "Locked" : (beforeUnlock ? "Opens 6 AM" : "Not yet");
-          var tagIcon = isPast ? ICONS.lock(11, THEME.inkSoft) : ICONS.clock(11, THEME.inkSoft);
-          html += '<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:' + THEME.inkSoft + '">' + tagIcon + tag + '</span>';
-        }
-        html += '</div>';
-        html += '<div style="display:flex;gap:6px">' +
-          statusBtnHtml(sKey, STATUS.ATTENDED, cur === STATUS.ATTENDED, isEditable, THEME.attended, THEME.attendedSoft, ICONS.check, "Attended") +
-          statusBtnHtml(sKey, STATUS.ABSENT, cur === STATUS.ABSENT, isEditable, THEME.absent, THEME.absentSoft, ICONS.x, "Absent") +
-          statusBtnHtml(sKey, STATUS.NOT_HELD, cur === STATUS.NOT_HELD, isEditable, THEME.notHeld, THEME.notHeldSoft, ICONS.ban, "Not held") +
-          '</div>';
-        if (!isEditable && !cur) {
-          var note = isPast ? "Left unmarked — permanently blank." : (beforeUnlock ? "Unlocks at 6:00 AM." : "Log this once the class happens.");
-          html += '<p style="font-size:10px;margin:6px 0 0;color:' + THEME.pending + '">' + note + '</p>';
-        }
-        html += '</div>';
-      });
-    } else {
-      html += '<p style="font-size:12px;text-align:center;padding:16px 0;color:' + THEME.inkSoft + '">Classes for this day are excluded from your attendance count.</p>';
-    }
-  }
-
-  html += '</div>';
-  return html;
+  state.settings.schedule=ns;
+  save(); closeManageSchedule(); render(); toast('Schedule saved successfully');
 }
-function bannerHtml(iconSvg, bg, color, text) {
-  return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;padding:6px 10px;border-radius:8px;margin-bottom:12px;background:' + bg + ';color:' + color + '">' + iconSvg + text + '</div>';
-}
-function statusBtnHtml(sKey, value, active, editable, color, softColor, iconFn, label) {
-  var disabled = !editable;
-  var bg = active ? color : softColor;
-  var fg = active ? "#FFFFFF" : color;
-  var opacity = disabled && !active ? 0.5 : 1;
-  return '<button data-act="' + (disabled ? "noop" : "setstatus") + '" data-key="' + sKey + '" data-value="' + value + '" ' +
-    'style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:8px;padding:7px 0;' +
-    'background:' + bg + ';color:' + fg + ';opacity:' + opacity + '">' +
-    iconFn(14, fg, 2.4) + '<span style="font-size:10px;font-weight:500;line-height:1">' + label + '</span></button>';
-}
+window.openManageSchedule=openManageSchedule;window.closeManageSchedule=closeManageSchedule;window.saveManageSchedule=saveManageSchedule;window.addFreshScheduleRow=addFreshScheduleRow;window.freshOtherToggle=freshOtherToggle;
 
-/* ---------------- render: stats tab ---------------- */
-function renderStatsTab() {
-  var stats = computeStats();
-  var chartRows = stats.subjectRows.filter(function (r) { return r.total > 0; });
-  var maxVal = 1;
-  chartRows.forEach(function (r) { var m = r.attended + r.absent; if (m > maxVal) maxVal = m; });
-
-  var html = '<div style="padding:0 16px">';
-
-  html += '<div style="border-radius:10px;padding:16px;margin-bottom:12px;text-align:center;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
-    '<div class="sg" style="font-size:36px;color:' + THEME.primary + '">' + (stats.percent === null ? "—" : stats.percent.toFixed(1) + "%") + '</div>' +
-    '<div style="font-size:12px;margin-top:4px;color:' + THEME.inkSoft + '">Overall attendance' +
-      (stats.percent !== null ? ' · ' + stats.attended + ' of ' + (stats.attended + stats.absent) + ' marked classes' : '') + '</div>' +
-  '</div>';
-
-  var boxes = [
-    ["Total sessions", stats.total, THEME.ink],
-    ["Attended", stats.attended, THEME.attended],
-    ["Absent", stats.absent, THEME.absent],
-    ["Not held", stats.notHeld, THEME.notHeld],
-    ["Holidays", stats.holidayCount, THEME.holiday],
-    ["Pending", stats.pending, THEME.pending]
-  ];
-  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">';
-  boxes.forEach(function (b) {
-    html += '<div style="border-radius:10px;padding:10px 0;text-align:center;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
-      '<div class="sg" style="font-size:18px;color:' + b[2] + '">' + b[1] + '</div>' +
-      '<div style="font-size:10px;margin-top:2px;color:' + THEME.inkSoft + '">' + b[0] + '</div></div>';
-  });
-  html += '</div>';
-
-  html += '<div style="border-radius:10px;padding:12px;margin-bottom:16px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
-    '<div style="font-size:14px;font-weight:500;margin-bottom:10px;color:' + THEME.ink + '">Attended vs Absent by subject</div>';
-  if (chartRows.length === 0) {
-    html += '<p style="font-size:12px;padding:24px 0;text-align:center;color:' + THEME.inkSoft + '">Log a few classes to see this chart fill in.</p>';
-  } else {
-    chartRows.forEach(function (r) {
-      var total = r.attended + r.absent;
-      var attPct = total > 0 ? (r.attended / maxVal) * 100 : 0;
-      var absPct = total > 0 ? (r.absent / maxVal) * 100 : 0;
-      html += '<div style="margin-bottom:10px">' +
-        '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:' + THEME.ink + '">' +
-          '<span>' + esc(r.subject) + '</span><span style="color:' + THEME.inkSoft + '">' + r.attended + '/' + total + '</span></div>' +
-        '<div style="display:flex;width:100%;height:8px;border-radius:4px;overflow:hidden;background:' + THEME.hairline + '">' +
-          '<div style="width:' + attPct + '%;background:' + THEME.attended + '"></div>' +
-          '<div style="width:' + absPct + '%;background:' + THEME.absent + '"></div>' +
-        '</div></div>';
-    });
-  }
-  html += '</div>';
-
-  html += '<div style="border-radius:10px;overflow:hidden;margin-bottom:16px;background:' + THEME.card + ';border:1px solid ' + THEME.hairline + '">' +
-    '<div style="font-size:14px;font-weight:500;padding:12px 12px 8px;color:' + THEME.ink + '">By subject</div>' +
-    '<table style="font-size:12px"><thead><tr style="color:' + THEME.inkSoft + ';border-top:1px solid ' + THEME.hairline + '">' +
-      '<th style="text-align:left;font-weight:500;padding:6px 12px">Subject</th>' +
-      '<th style="text-align:right;font-weight:500;padding:6px 8px">Held</th>' +
-      '<th style="text-align:right;font-weight:500;padding:6px 8px">Att.</th>' +
-      '<th style="text-align:right;font-weight:500;padding:6px 8px">Abs.</th>' +
-      '<th style="text-align:right;font-weight:500;padding:6px 12px">%</th></tr></thead><tbody>';
-  stats.subjectRows.forEach(function (r) {
-    html += '<tr style="border-top:1px solid ' + THEME.hairline + '">' +
-      '<td style="padding:6px 12px;color:' + THEME.ink + '">' + esc(r.subject) + '</td>' +
-      '<td style="text-align:right;padding:6px 8px;color:' + THEME.inkSoft + '">' + (r.attended + r.absent) + '</td>' +
-      '<td style="text-align:right;padding:6px 8px;color:' + THEME.attended + '">' + r.attended + '</td>' +
-      '<td style="text-align:right;padding:6px 8px;color:' + THEME.absent + '">' + r.absent + '</td>' +
-      '<td style="text-align:right;padding:6px 12px;font-weight:500;color:' + THEME.ink + '">' + (r.percent === null ? "—" : r.percent + "%") + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-
-  html += '<div style="margin-bottom:6px">';
-  if (!state.confirmReset) {
-    html += '<button data-act="askreset" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;padding:8px 0;border-radius:8px;color:' + THEME.inkSoft + ';border:1px solid ' + THEME.hairline + '">' +
-      ICONS.reset(13) + 'Reset all data</button>';
-  } else {
-    html += '<div style="border-radius:8px;padding:12px;text-align:center;background:' + THEME.absentSoft + '">' +
-      '<p style="font-size:12px;margin:0 0 8px;color:' + THEME.ink + '">This clears every tick you\'ve logged. This can\'t be undone.</p>' +
-      '<div style="display:flex;gap:8px;justify-content:center">' +
-        '<button data-act="doreset" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.absent + ';color:#fff">Yes, reset</button>' +
-        '<button data-act="cancelreset" style="font-size:12px;padding:7px 12px;border-radius:8px;font-weight:500;background:' + THEME.card + ';color:' + THEME.ink + ';border:1px solid ' + THEME.hairline + '">Cancel</button>' +
-      '</div></div>';
-  }
-  html += '</div>';
-
-  html += '<p style="font-size:10.5px;text-align:center;margin:8px 0 24px;color:' + THEME.pending + '">Built by Sharad Sourav, for personal use only.</p>';
-  html += '</div>';
-  return html;
-}
-
-/* ---------------- render root ---------------- */
-function render() {
-  var root = document.getElementById("app");
-  var content = state.tab === "log" ? renderLogTab() : renderStatsTab();
-  root.innerHTML =
-    '<div style="background:' + THEME.bg + ';min-height:100vh;display:flex;flex-direction:column">' +
-      renderHeader() +
-      '<div style="flex:1;padding-bottom:80px">' + content + '</div>' +
-      renderBottomNav() +
-    '</div>';
-}
-
-/* ---------------- event delegation ---------------- */
-document.addEventListener("click", function (e) {
-  var el = e.target.closest("[data-act]");
-  if (!el) return;
-  var act = el.getAttribute("data-act");
-  if (act === "tab") { state.tab = el.getAttribute("data-tab"); render(); }
-  else if (act === "prevday") { state.viewDate = clampToRange(addDays(state.viewDate, -1)); render(); }
-  else if (act === "nextday") { state.viewDate = clampToRange(addDays(state.viewDate, 1)); render(); }
-  else if (act === "goToday") { state.viewDate = todayClamped(); render(); }
-  else if (act === "toggleholiday") { toggleHoliday(el.getAttribute("data-key")); }
-  else if (act === "setstatus") { setSessionStatus(el.getAttribute("data-key"), el.getAttribute("data-value")); }
-  else if (act === "askreset") { state.confirmReset = true; render(); }
-  else if (act === "cancelreset") { state.confirmReset = false; render(); }
-  else if (act === "doreset") { resetAll(); }
-  /* "noop" intentionally does nothing (locked/disabled controls) */
-});
-document.addEventListener("change", function (e) {
-  if (e.target && e.target.getAttribute && e.target.getAttribute("data-act") === "datepick") {
-    var val = e.target.value;
-    if (val) {
-      var parts = val.split("-").map(Number);
-      state.viewDate = new Date(parts[0], parts[1] - 1, parts[2]);
-      render();
-    }
-  }
-});
-
-/* ---------------- day auto-advance ---------------- */
-function checkDay() {
-  var nowKey = dkey(realToday());
-  if (nowKey !== state.knownToday) {
-    state.knownToday = nowKey;
-    state.viewDate = todayClamped();
-    state.tab = "log";
-  }
-  render();
-}
-document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") checkDay(); });
-window.addEventListener("focus", checkDay);
-setInterval(checkDay, 60 * 1000);
-
-/* ---------------- boot ---------------- */
-loadState();
-render();
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () {});
-  });
-}
-</script>
-</body>
-</html>
+</script></body></html>
