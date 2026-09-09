@@ -14,87 +14,19 @@
 </style>
 
 <style id="simpleWheelTimePickerStyles">
-.timeWheelModal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:grid;place-items:end center;padding:12px}
-.timeWheelBox{width:min(520px,100%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow)}
-.timeWheelTitle{text-align:center;font-size:18px;font-weight:900;margin:2px 0 14px;color:var(--ink)}
-.timeWheel{display:grid;grid-template-columns:1fr 1fr .85fr;gap:10px;position:relative;padding:10px 0}
-.timeWheel:before,.timeWheel:after{content:"";position:absolute;left:0;right:0;height:38%;pointer-events:none;z-index:2}
-.timeWheel:before{top:0;background:linear-gradient(var(--card),transparent)}
-.timeWheel:after{bottom:0;background:linear-gradient(transparent,var(--card))}
-.timeWheelCol{height:216px;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center;border:1px solid var(--line);border-radius:16px;background:var(--bg);position:relative}
-.timeWheelCol::-webkit-scrollbar{display:none}
-.timeWheelItem{height:54px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:18px;font-weight:800;color:var(--soft);border:0;background:transparent;width:100%;cursor:pointer}
-.timeWheelItem.selected{color:var(--primary)}
-.timeWheelMarker{position:absolute;left:6px;right:6px;top:50%;height:54px;transform:translateY(-50%);border:2px solid var(--primary);border-radius:13px;pointer-events:none;z-index:1}
-.timeWheelActions{display:flex;gap:9px;margin-top:14px}.timeWheelActions button{flex:1}
-.timePickerHint{text-align:center;font-size:11px;color:var(--soft);margin-top:2px}
+.timeWheelModal{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.46);display:grid;place-items:end center;padding:0}
+.timeWheelBox{width:min(560px,100%);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:28px 28px 0 0;padding:22px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 30px rgba(0,0,0,.18)}
+.timeWheelTitle{text-align:center;font-size:22px;font-weight:900;margin:0 0 8px;color:var(--ink)}
+.timePickerHint{text-align:center;font-size:13px;color:var(--soft);margin:0 0 18px}
+.timeWheel{display:grid;grid-template-columns:1fr 1fr .8fr;gap:8px;position:relative;height:230px;overflow:hidden;border-radius:18px;background:var(--bg)}
+.timeWheel:before,.timeWheel:after{content:"";position:absolute;left:0;right:0;height:36%;pointer-events:none;z-index:4}.timeWheel:before{top:0;background:linear-gradient(to bottom,var(--bg) 10%,color-mix(in srgb,var(--bg) 88%,transparent) 55%,transparent)}.timeWheel:after{bottom:0;background:linear-gradient(to top,var(--bg) 10%,color-mix(in srgb,var(--bg) 88%,transparent) 55%,transparent)}
+.timeWheelCol{height:230px;overflow-y:auto;overscroll-behavior:contain;scroll-snap-type:y mandatory;scrollbar-width:none;text-align:center;position:relative;z-index:2;padding:92px 0}.timeWheelCol::-webkit-scrollbar{display:none}
+.timeWheelItem{height:46px;min-height:46px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:19px;font-weight:800;color:var(--soft);border:0;background:transparent;width:100%;cursor:pointer;transition:color .12s,transform .12s,opacity .12s;opacity:.62}.timeWheelItem.selected{color:var(--primary);opacity:1;font-size:22px;font-weight:900;transform:scale(1.04)}
+.timeWheelMarker{position:absolute;left:7px;right:7px;top:92px;height:46px;border:2px solid var(--primary);border-radius:12px;pointer-events:none;z-index:5;background:color-mix(in srgb,var(--primarySoft) 30%,transparent)}
+.timeWheelActions{display:flex;gap:10px;margin-top:18px}.timeWheelActions button{flex:1;min-height:52px;font-size:16px}@media(max-width:380px){.timeWheel{gap:3px}.timeWheelBox{padding-left:12px;padding-right:12px}.timeWheelItem{font-size:17px}.timeWheelItem.selected{font-size:20px}}
 </style>
 <script id="simpleWheelTimePickerScript">
-(function(){
-  let activeTimeInput=null;
-  function pad2(n){return String(n).padStart(2,'0')}
-  function parse24(v){
-    const m=/^(\d{1,2}):(\d{2})$/.exec(v||'');
-    let h=m?Number(m[1]):9, min=m?Number(m[2]):0;
-    h=Math.max(0,Math.min(23,h)); min=Math.max(0,Math.min(59,min));
-    return {h,min};
-  }
-  function makeCol(values, selected, cls){
-    return '<div class="timeWheelCol '+cls+'">'+values.map((v,i)=>'<button type="button" class="timeWheelItem" data-value="'+v+'">'+v+'</button>').join('')+'</div>';
-  }
-  function openWheel(input){
-    if(!input || input.disabled) return;
-    document.querySelectorAll('.timeWheelModal').forEach(x=>x.remove());
-    activeTimeInput=input;
-    const t=parse24(input.value), ap=t.h>=12?'PM':'AM', hour=(t.h%12)||12;
-    const hours=Array.from({length:12},(_,i)=>String(i+1));
-    const mins=Array.from({length:60},(_,i)=>pad2(i));
-    const html='<div class="timeWheelModal" id="simpleWheelTimePicker"><div class="timeWheelBox" role="dialog" aria-modal="true">'
-      +'<div class="timeWheelTitle">Select time</div><div class="timePickerHint">Scroll the wheels to choose hour, minute and AM/PM</div>'
-      +'<div class="timeWheel"><div class="timeWheelMarker"></div>'
-      +makeCol(hours,hour,'wheelHour')+makeCol(mins,pad2(t.min),'wheelMinute')+makeCol(['AM','PM'],ap,'wheelPeriod')
-      +'</div><div class="timeWheelActions"><button type="button" class="btn outline" data-wheel="cancel">Cancel</button><button type="button" class="btn" data-wheel="save">Done</button></div></div></div>';
-    document.body.insertAdjacentHTML('beforeend',html);
-    const modal=document.getElementById('simpleWheelTimePicker');
-    function selectButton(col, btn, smooth=true){
-      col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===btn));
-      btn.scrollIntoView({block:'center',behavior:smooth?'smooth':'auto'});
-    }
-    modal.querySelectorAll('.timeWheelCol').forEach(col=>{
-      const sel=[...col.querySelectorAll('.timeWheelItem')].find(b=>b.dataset.value===({wheelHour:String(hour),wheelMinute:pad2(t.min),wheelPeriod:ap}[col.classList.contains('wheelHour')?'wheelHour':col.classList.contains('wheelMinute')?'wheelMinute':'wheelPeriod']));
-      if(sel) selectButton(col,sel,false);
-      col.addEventListener('scroll',()=>{
-        const cr=col.getBoundingClientRect(), cy=cr.top+cr.height/2;
-        let best=null,dist=Infinity;
-        col.querySelectorAll('.timeWheelItem').forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs((r.top+r.height/2)-cy);if(d<dist){dist=d;best=b}});
-        if(best){col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===best));}
-      },{passive:true});
-      col.addEventListener('click',e=>{const b=e.target.closest('.timeWheelItem');if(b)selectButton(col,b);});
-    });
-    modal.addEventListener('click',e=>{
-      if(e.target===modal || e.target.dataset.wheel==='cancel'){modal.remove();activeTimeInput=null;return;}
-      if(e.target.dataset.wheel==='save' && activeTimeInput){
-        const get=cls=>modal.querySelector('.'+cls+' .timeWheelItem.selected')?.dataset.value || modal.querySelector('.'+cls+' .timeWheelItem')?.dataset.value;
-        let hh=Number(get('wheelHour')), mm=Number(get('wheelMinute')), period=get('wheelPeriod');
-        if(period==='AM'&&hh===12)hh=0; if(period==='PM'&&hh!==12)hh+=12;
-        activeTimeInput.value=pad2(hh)+':'+pad2(mm);
-        activeTimeInput.dispatchEvent(new Event('input',{bubbles:true}));
-        activeTimeInput.dispatchEvent(new Event('change',{bubbles:true}));
-        modal.remove();activeTimeInput=null;
-      }
-    });
-  }
-  // Replace the browser picker everywhere in the app with the same simple wheel picker.
-  document.addEventListener('pointerdown',function(e){
-    const input=e.target.closest('input[type="time"]');
-    if(input){e.preventDefault();e.stopPropagation();openWheel(input);}
-  },true);
-  document.addEventListener('keydown',function(e){
-    const input=e.target.closest&&e.target.closest('input[type="time"]');
-    if(input&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openWheel(input);}
-  },true);
-  window.openSimpleWheelTimePicker=openWheel;
-})();
+(function(){let activeTimeInput=null;const ITEM_H=46,COL_H=230;function pad2(n){return String(n).padStart(2,'0')}function parse24(v){const m=/^(\d{1,2}):(\d{2})$/.exec(v||'');let h=m?Number(m[1]):9,min=m?Number(m[2]):0;h=Math.max(0,Math.min(23,h));min=Math.max(0,Math.min(59,min));return {h,min}}function makeCol(values,cls){return '<div class="timeWheelCol '+cls+'">'+values.map(v=>'<button type="button" class="timeWheelItem" data-value="'+v+'">'+v+'</button>').join('')+'</div>'}function centerButton(col,btn,smooth){if(!btn)return;col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===btn));col.scrollTo({top:Math.max(0,btn.offsetTop-(COL_H-ITEM_H)/2),behavior:smooth?'smooth':'auto'})}function closestToCenter(col){const cr=col.getBoundingClientRect(),cy=cr.top+cr.height/2;let best=null,dist=Infinity;col.querySelectorAll('.timeWheelItem').forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs((r.top+r.height/2)-cy);if(d<dist){dist=d;best=b}});return best}function openWheel(input){if(!input||input.disabled)return;document.querySelectorAll('.timeWheelModal').forEach(x=>x.remove());activeTimeInput=input;const t=parse24(input.value),ap=t.h>=12?'PM':'AM',hour=String((t.h%12)||12),hours=Array.from({length:12},(_,i)=>String(i+1)),mins=Array.from({length:60},(_,i)=>pad2(i));const html='<div class="timeWheelModal" id="simpleWheelTimePicker"><div class="timeWheelBox" role="dialog" aria-modal="true"><div class="timeWheelTitle">Select time</div><div class="timePickerHint">Scroll to choose hour, minute and AM/PM</div><div class="timeWheel"><div class="timeWheelMarker"></div>'+makeCol(hours,'wheelHour')+makeCol(mins,'wheelMinute')+makeCol(['AM','PM'],'wheelPeriod')+'</div><div class="timeWheelActions"><button type="button" class="btn outline" data-wheel="cancel">Cancel</button><button type="button" class="btn" data-wheel="save">Done</button></div></div></div>';document.body.insertAdjacentHTML('beforeend',html);const modal=document.getElementById('simpleWheelTimePicker'),wanted={wheelHour:hour,wheelMinute:pad2(t.min),wheelPeriod:ap};modal.querySelectorAll('.timeWheelCol').forEach(col=>{const cls=col.classList.contains('wheelHour')?'wheelHour':col.classList.contains('wheelMinute')?'wheelMinute':'wheelPeriod',sel=[...col.querySelectorAll('.timeWheelItem')].find(b=>b.dataset.value===wanted[cls]);requestAnimationFrame(()=>centerButton(col,sel,false));let timer;col.addEventListener('scroll',()=>{const best=closestToCenter(col);if(best)col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===best));clearTimeout(timer);timer=setTimeout(()=>{const b=closestToCenter(col);if(b)centerButton(col,b,true)},80)},{passive:true});col.addEventListener('click',e=>{const b=e.target.closest('.timeWheelItem');if(b)centerButton(col,b,true)})});modal.addEventListener('click',e=>{if(e.target===modal||e.target.dataset.wheel==='cancel'){modal.remove();activeTimeInput=null;return}if(e.target.dataset.wheel==='save'&&activeTimeInput){const get=cls=>modal.querySelector('.'+cls+' .timeWheelItem.selected')?.dataset.value;let hh=Number(get('wheelHour')),mm=Number(get('wheelMinute')),period=get('wheelPeriod');if(period==='AM'&&hh===12)hh=0;if(period==='PM'&&hh!==12)hh+=12;activeTimeInput.value=pad2(hh)+':'+pad2(mm);activeTimeInput.dispatchEvent(new Event('input',{bubbles:true}));activeTimeInput.dispatchEvent(new Event('change',{bubbles:true}));modal.remove();activeTimeInput=null}})}document.addEventListener('pointerdown',e=>{const input=e.target.closest('input[type="time"]');if(input){e.preventDefault();e.stopPropagation();openWheel(input)}},true);document.addEventListener('keydown',e=>{const input=e.target.closest&&e.target.closest('input[type="time"]');if(input&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openWheel(input)}},true);window.openSimpleWheelTimePicker=openWheel})();
 </script>
 </head>
 <body><div id="app"></div>
