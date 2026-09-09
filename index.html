@@ -113,7 +113,7 @@ else if(day===4&&st==="16:00"&&en==="17:00"&&["Pediatrics (Evening)","Anesthesia
 else if(day===5&&st==="15:00"&&en==="16:00"&&["Orthopedics (Evening)","OBG (Evening)"].includes(sub))x[2]=(n<=2?"Orthopedics":"OBG")+" (Evening)";
 else if(day===5&&st==="16:00"&&en==="17:00"&&sub==="General Medicine (Evening)")x[2]="General Medicine (Evening)";
 return x}
-function sessionsFor(d){let dk=key(d),base=(state.settings.schedule[d.getDay()]||[]).map(x=>clone(x));base=base.map((x,i)=>{applyDateBasedEvening(d,x);let original=x[2];if(original==="Clinical Posting"){let dep=clinicalDepartmentFor(d);x[2]=dep+" (Clinical)";x._scheduled=original; x._clinical=true}else x._scheduled=original;if(state.overrides&&state.overrides[dk]&&state.overrides[dk][i]){let o=state.overrides[dk][i];x._scheduled=x[2];if(typeof o==="string")x[2]=o;else{x[2]=o.subject||x[2];x[0]=o.start||x[0];x[1]=o.end||x[1]}}return x});let extra=(state.extraClasses&&state.extraClasses[dk]||[]).map(x=>[x[0],x[1],x[2],true]);return base.concat(extra)}
+function sessionsFor(d){let dk=key(d),hasRoll=Number.isFinite(Number(state.settings.rollNumber))&&Number(state.settings.rollNumber)>=1&&Number(state.settings.rollNumber)<=100,base=(state.settings.schedule[d.getDay()]||[]).map(x=>clone(x));base=base.map((x,i)=>{applyDateBasedEvening(d,x);let original=x[2];if(original==="Clinical Posting"){if(!hasRoll)return null;let dep=clinicalDepartmentFor(d);x[2]=dep+" (Clinical)";x._scheduled=original; x._clinical=true}else x._scheduled=original;if(state.overrides&&state.overrides[dk]&&state.overrides[dk][i]){let o=state.overrides[dk][i];x._scheduled=x[2];if(typeof o==="string")x[2]=o;else{x[2]=o.subject||x[2];x[0]=o.start||x[0];x[1]=o.end||x[1]}}return x}).filter(Boolean);let extra=(state.extraClasses&&state.extraClasses[dk]||[]).map(x=>[x[0],x[1],x[2],true]);return base.concat(extra)}
 function sessionKey(dateKey,i){return dateKey+"-"+i}
 function statusOf(dateKey,i){return state.status[sessionKey(dateKey,i)]}
 function draftValue(k){return Object.prototype.hasOwnProperty.call(draftStatus,k)?draftStatus[k]:state.status[k]}
@@ -143,6 +143,7 @@ function logTab(){
   let h=dateControls();
   if(d<START_DATE)return h+`<div class="banner lock">🔒 Attendance tracking starts on 7 Sep 2026.</div>`;
   if(ss.length)h+=`<div class="card progressCard"><div class="progressHead"><b>Day's progress</b><span class="progressText">${isHoliday?"Holiday":p.marked+" / "+p.total+" marked"}</span></div><div class="progress"><i style="width:${p.total?p.marked/p.total*100:0}%"></i></div></div>`;
+  if(!Number.isFinite(Number(state.settings.rollNumber))&&((state.settings.schedule[d.getDay()]||[]).some(x=>x[2]==="Clinical Posting")))h+=`<div class="banner warn">🩺 Clinical attendance is unavailable until you save your Clinical Posting Roll Number in Settings. Normal classes can still be marked.</div>`;
   if(before)h+=`<div class="banner warn">🕕 Logging opens at 6:00 AM.</div>`;
   else if(future)h+=`<div class="banner lock">🔒 Future date — it becomes editable when that day arrives.</div>`;
   else if(past)h+=`<div class="banner info">✓ Past classes are handled individually: an unmarked class can be entered once. After it is marked and saved, that class is permanently locked.</div>`;
