@@ -41,6 +41,41 @@
 .modal{padding:8px}.modalBox{border-radius:13px;padding:10px;max-height:90vh}.rollPopup{padding:12px}.rollPopupBox{border-radius:13px;padding:17px 14px}.rollPopupIcon{font-size:28px}.rollPopupBox h2{font-size:18px}.rollPopupBox p{font-size:12px;margin-bottom:14px}.toast{bottom:68px;padding:8px 11px;font-size:10px}
 @media(max-width:430px){.sessionMain{grid-template-columns:minmax(0,1fr) auto}.status{padding:0 6px;font-size:9px}.miniBtn{font-size:9px;padding:4px 6px}.sessionActions{max-width:150px}.noteRow{gap:5px}.noteSave{font-size:10px;padding:0 8px}}
 @media(min-width:650px){.session{padding:8px 10px}.sessionMain{grid-template-columns:minmax(0,1fr) auto}.sessionGrid{gap:6px}.subjectGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Restored Log/card/button design (from the pre-responsive version), while retaining current functionality. */
+.header{padding:16px 16px 10px}
+.brand{font-size:20px;gap:9px}
+.sub{font-size:12px;margin:3px 0}
+.container{padding:0 14px 92px;max-width:760px}
+.card{border-radius:16px}
+.btn{padding:11px 13px;border-radius:12px;font-size:13px;line-height:normal}
+.datebar{grid-template-columns:48px 1fr 48px;padding:7px;margin:6px 0 10px}
+.iconbtn{width:42px;height:42px;border-radius:12px;font-size:28px}
+.banner{padding:10px 12px;border-radius:13px;margin:10px 0;font-size:12px;gap:8px}
+.progressCard{padding:14px;margin-bottom:10px}
+.progress{height:9px;margin-top:10px}
+.holiday{padding:11px;border-radius:13px;margin:0 0 10px;font-size:inherit}
+.sessionGrid{display:block}
+.session{padding:13px;margin:9px 0;border:1px solid var(--line);border-left:4px solid var(--primary);border-top:1px solid var(--line);display:block;min-height:0;background:var(--card)}
+.sessionMain{display:block}
+.sessionInfo{min-width:0}
+.sessionName{font-size:16px;line-height:normal;overflow-wrap:normal}
+.sessionActions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex-wrap:wrap}
+.miniBtn{padding:7px 9px;font-size:11px;border-radius:8px}
+.statusRow{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:11px;padding:0;justify-content:normal}
+.status{height:auto;min-height:54px;padding:0 6px;border-radius:11px;font-size:12px;white-space:normal;box-shadow:none;transform:none}
+.status.green.active{background:#166b43;color:#eafff2;border-color:#0d4f31;box-shadow:0 4px 0 #0b4329,0 6px 10px rgba(0,0,0,.18);transform:translateY(-1px)}
+.status.red.active{background:#8f3026;color:#fff0ee;border-color:#681f18;box-shadow:0 4px 0 #5c1b16,0 6px 10px rgba(0,0,0,.18);transform:translateY(-1px)}
+.status.gray.active{background:#3f4845;color:#f0f4f2;border-color:#29302e;box-shadow:0 4px 0 #242a28,0 6px 10px rgba(0,0,0,.18);transform:translateY(-1px)}
+.status.green:not(.active){background:var(--greenSoft);color:var(--green);border-color:var(--green)}
+.status.red:not(.active){background:var(--redSoft);color:var(--red);border-color:var(--red)}
+.status.gray:not(.active){background:var(--line);color:var(--soft);border-color:var(--line)}
+.saveAttendance{width:100%;margin:12px 0 4px;padding:13px;border-radius:13px;font-size:13px}
+.noteBox{padding:12px;margin:10px 0}
+.noteRow{display:block;margin-top:0}
+.noteSave{width:auto;align-self:auto;white-space:normal;padding:7px 10px}
+.formCard{padding:14px;margin:10px 0}
+
 </style>
 
 <style id="simpleWheelTimePickerStyles">
@@ -239,7 +274,7 @@ function commitAttendance(dk){
 function toggleHoliday(dk){if(!editable(dk))return;state.holidays[dk]?delete state.holidays[dk]:state.holidays[dk]=true;save();render()}
 function setNote(dk,text){if(!editable(dk))return;if(text.trim())state.notes[dk]=text.trim();else delete state.notes[dk];save();toast("Note saved")}
 function rangeEnd(){return today()}
-function compute(filter="all"){let out={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0,holiday:0,subjects:{}};subjects().forEach(s=>out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0});let cur=new Date(START_DATE),end=rangeEnd();while(cur<=end){if(filter!=="all"&&key(cur).slice(0,7)!==filter){cur=add(cur,1);continue}let dk=key(cur),ss=sessionsFor(cur);if(ss.length){if(state.holidays[dk])out.holiday++;else ss.forEach((x,i)=>{let rec=state.records&&state.records[sessionKey(dk,i)],s=normalizeSubjectText(rec&&rec.subject?rec.subject:x[2]),st=statusOf(dk,i);if(!out.subjects[s])out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0};out.total++;out.subjects[s].total++;if(st===STATUS.ATTENDED){out.attended++;out.subjects[s].attended++}else if(st===STATUS.ABSENT){out.absent++;out.subjects[s].absent++}else if(st===STATUS.LEAVE){out.leave++;out.subjects[s].leave++}else if(st===STATUS.NOT_HELD){out.notHeld++;out.subjects[s].notHeld++}else{out.pending++;out.subjects[s].pending++}})}cur=add(cur,1)}out.rows=Object.entries(out.subjects).map(([subject,x])=>{let held=x.attended+x.absent+x.leave,pct=held?x.attended/held*100:null;return {subject,...x,held,pct}});out.held=out.attended+out.absent+out.leave;out.percent=out.held?out.attended/out.held*100:null;return out}
+function compute(filter="all"){let out={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0,holiday:0,subjects:{}};subjects().forEach(s=>out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0});let cur=new Date(START_DATE),end=rangeEnd();while(cur<=end){if(filter!=="all"&&key(cur).slice(0,7)!==filter){cur=add(cur,1);continue}let dk=key(cur),ss=sessionsFor(cur);if(ss.length){if(state.holidays[dk])out.holiday++;else ss.forEach((x,i)=>{let rec=state.records&&state.records[sessionKey(dk,i)],s=normalizeSubjectText(rec&&rec.subject?rec.subject:x[2]),st=statusOf(dk,i);if(!out.subjects[s])out.subjects[s]={attended:0,absent:0,leave:0,notHeld:0,pending:0,total:0};if(st!==STATUS.NOT_HELD){out.total++;out.subjects[s].total++}if(st===STATUS.ATTENDED){out.attended++;out.subjects[s].attended++}else if(st===STATUS.ABSENT){out.absent++;out.subjects[s].absent++}else if(st===STATUS.LEAVE){out.leave++;out.subjects[s].leave++}else if(st===STATUS.NOT_HELD){out.notHeld++;out.subjects[s].notHeld++}else{out.pending++;out.subjects[s].pending++}})}cur=add(cur,1)}out.rows=Object.entries(out.subjects).map(([subject,x])=>{let held=x.attended+x.absent+x.leave,pct=held?x.attended/held*100:null;return {subject,...x,held,pct}});out.held=out.attended+out.absent+out.leave;out.percent=out.held?out.attended/out.held*100:null;return out}
 function dayProgress(d){let dk=key(d),ss=sessionsFor(d);if(state.holidays[dk])return {total:0,marked:0};let marked=ss.filter((_,i)=>!!statusOf(dk,i)).length;return {total:ss.length,marked}}
 function header(){return `<div class="header"><div class="brand">▣ Attendance</div><p class="sub">7 Sep 2026 onwards · ${esc(state.settings.course)}</p><p class="sub">Personal attendance tracker</p></div>`}
 function dateControls(){let d=parseKey(state.viewDate);return `<div class="card datebar"><button class="iconbtn" data-act="prev">‹</button><button data-act="pickDate" style="background:transparent;color:var(--ink);border:0" class="datecenter"><b>${DAYS[d.getDay()]}</b><span>${fmt(d)} · 📅</span></button><button class="iconbtn" data-act="next">›</button></div><div class="row" style="margin-bottom:10px"><button class="btn outline grow" data-act="dateInput">Choose date</button>${key(d)!==key(today())?`<button class="btn soft" data-act="today">Today</button>`:""}</div>`}
@@ -257,11 +292,9 @@ function logTab(){
   h+=`<button class="holiday" data-act="holiday" ${can?"":"disabled"}>${isHoliday?"🏖 Marked as holiday"+(can?" — tap to undo":""):can?"🏖 Mark whole day as holiday":"🔒 Not a holiday"}</button>`;
   if(!isHoliday){
     const baseCount=(state.settings.schedule[d.getDay()]||[]).length;
-    h+=`<div class="sessionGrid">`;
-    ss.forEach((s,i)=>{let cur=draftValue(sessionKey(dk,i)),slotCan=sessionEditable(dk,i),locked=slotCan?"":"disabled",changed=s._scheduled&&s._scheduled!==s[2],isExtra=i>=baseCount;let savedStatus=!!state.status[sessionKey(dk,i)];h+=`<div class="card session"><div class="sessionMain"><div class="sessionInfo"><div class="sessionName">${esc(s[2])}${changed?" 🔄":""}${isExtra?" 📌":""}</div><div class="sessionTime">${time(s[0])} – ${time(s[1])}</div>${changed?`<div class="small">Scheduled: ${esc(s._scheduled)}</div>`:""}</div><div class="sessionActions">${slotCan?`<button class="btn outline miniBtn" data-act="editClass" data-i="${i}">✏️ Edit</button>`:`<span class="locktag">${s._requiresRoll?"🔒 Roll":future?"🔒 Future":past?"🔒 Saved":"🕕 Later"}</span>`}${isExtra&&canDeleteExtra(dk,i)?`<button class="btn outline miniBtn" data-act="removeExtra" data-i="${i}">🗑 Delete</button>`:""}</div><div class="statusRow">${s._requiresRoll?`<button data-act="clinicalRollAlert" class="status green">✓ Present</button><button data-act="clinicalRollAlert" class="status red">✕ Absent</button><button data-act="clinicalRollAlert" class="status gray">⊘ Not held</button>`:`<button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="attended" class="status green ${cur==="attended"?"active":""}">✓ Present</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="absent" class="status red ${cur==="absent"?"active":""}">✕ Absent</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="not_held" class="status gray ${cur==="not_held"?"active":""}">⊘ Not held</button>`}</div></div></div>`});
-    h+=`</div>`;
+    ss.forEach((s,i)=>{let cur=draftValue(sessionKey(dk,i)),slotCan=sessionEditable(dk,i),locked=slotCan?"":"disabled",changed=s._scheduled&&s._scheduled!==s[2],isExtra=i>=baseCount;let savedStatus=!!state.status[sessionKey(dk,i)];h+=`<div class="card session"><div class="sessionTop"><div><div class="sessionName">${esc(s[2])}${changed?" 🔄":""}${isExtra?" 📌":""}</div>${changed?`<div class="small">Scheduled: ${esc(s._scheduled)}</div>`:""}<div class="sessionTime">${time(s[0])} – ${time(s[1])}</div></div><div style="display:flex;gap:6px;align-items:center">${slotCan?`<button class="btn outline" style="padding:7px 9px;font-size:11px" data-act="editClass" data-i="${i}">✏️ Edit</button>`:`<div class="locktag">${s._requiresRoll?"🔒 Save roll number":future?"🔒 Future":past?"🔒 Saved":"🕕 Opens later"}</div>`}${isExtra&&canDeleteExtra(dk,i)?`<button class="btn outline" style="padding:7px 9px;font-size:11px" data-act="removeExtra" data-i="${i}">🗑 Delete</button>`:""}</div></div><div class="statusRow">${s._requiresRoll?`<button data-act="clinicalRollAlert" class="status green">✓<br>Present</button><button data-act="clinicalRollAlert" class="status red">✕<br>Absent</button><button data-act="clinicalRollAlert" class="status gray">⊘<br>Not held</button>`:`<button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="attended" class="status green ${cur==="attended"?"active":""}">✓<br>Present</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="absent" class="status red ${cur==="absent"?"active":""}">✕<br>Absent</button><button ${locked} data-act="status" data-k="${sessionKey(dk,i)}" data-v="not_held" class="status gray ${cur==="not_held"?"active":""}">⊘<br>Not held</button>`}</div></div>`});
     if(can){h+=`<button class="btn outline" style="width:100%;margin-top:8px" data-act="addExtra">＋ Add extra class</button>`;h+=`<button class="saveAttendance" data-act="saveAttendance">💾 Save attendance</button>`}
-    h+=`<div class="card noteBox"><div class="noteHead"><h3>📝 Note for this day</h3></div><div class="noteRow"><textarea id="dayNote" ${can?"":"disabled"} placeholder="Optional note...">${esc(state.notes[dk]||"")}</textarea>${can?`<button class="btn soft noteSave" data-act="saveNote">Save note</button>`:""}</div></div>`
+    h+=`<div class="card noteBox"><h3>📝 Note for this day</h3><textarea id="dayNote" ${can?"":"disabled"} placeholder="Optional note...">${esc(state.notes[dk]||"")}</textarea>${can?`<div style="margin-top:8px"><button class="btn soft" data-act="saveNote">Save note</button></div>`:""}</div>`
   }else h+=`<div class="card formCard" style="text-align:center">🏖 Classes are excluded from attendance calculations for this holiday.</div>`;
   return h
 }
