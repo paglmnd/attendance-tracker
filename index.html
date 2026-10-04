@@ -29,7 +29,69 @@
 .timeWheelActions{display:flex;gap:10px;margin-top:18px}.timeWheelActions button{flex:1;min-height:52px;font-size:16px}@media(max-width:380px){.timeWheel{gap:3px}.timeWheelBox{padding-left:12px;padding-right:12px}.timeWheelItem{font-size:17px}.timeWheelItem.selected{font-size:20px}}
 </style>
 <script id="simpleWheelTimePickerScript">
-(function(){let activeTimeInput=null;const ITEM_H=46,COL_H=230;function pad2(n){return String(n).padStart(2,'0')}function parse24(v){const m=/^(\d{1,2}):(\d{2})$/.exec(v||'');let h=m?Number(m[1]):9,min=m?Number(m[2]):0;h=Math.max(0,Math.min(23,h));min=Math.max(0,Math.min(59,min));return {h,min}}function makeCol(values,cls){return '<div class="timeWheelCol '+cls+'">'+values.map(v=>'<button type="button" class="timeWheelItem" data-value="'+v+'">'+v+'</button>').join('')+'</div>'}function centerButton(col,btn,smooth){if(!btn)return;col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===btn));col.scrollTo({top:Math.max(0,btn.offsetTop-(COL_H-ITEM_H)/2),behavior:smooth?'smooth':'auto'})}function closestToCenter(col){const cr=col.getBoundingClientRect(),cy=cr.top+cr.height/2;let best=null,dist=Infinity;col.querySelectorAll('.timeWheelItem').forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs((r.top+r.height/2)-cy);if(d<dist){dist=d;best=b}});return best}function openWheel(input){if(!input||input.disabled)return;document.querySelectorAll('.timeWheelModal').forEach(x=>x.remove());activeTimeInput=input;const t=parse24(input.value),ap=t.h>=12?'PM':'AM',hour=String((t.h%12)||12),hours=Array.from({length:12},(_,i)=>String(i+1)),mins=Array.from({length:60},(_,i)=>pad2(i));const html='<div class="timeWheelModal" id="simpleWheelTimePicker"><div class="timeWheelBox" role="dialog" aria-modal="true"><div class="timeWheelTitle">Select time</div><div class="timePickerHint">Scroll to choose hour, minute and AM/PM</div><div class="timeWheel"><div class="timeWheelMarker"></div>'+makeCol(hours,'wheelHour')+makeCol(mins,'wheelMinute')+makeCol(['AM','PM'],'wheelPeriod')+'</div><div class="timeWheelActions"><button type="button" class="btn outline" data-wheel="cancel">Cancel</button><button type="button" class="btn" data-wheel="save">Done</button></div></div></div>';document.body.insertAdjacentHTML('beforeend',html);const modal=document.getElementById('simpleWheelTimePicker'),wanted={wheelHour:hour,wheelMinute:pad2(t.min),wheelPeriod:ap};modal.querySelectorAll('.timeWheelCol').forEach(col=>{const cls=col.classList.contains('wheelHour')?'wheelHour':col.classList.contains('wheelMinute')?'wheelMinute':'wheelPeriod',sel=[...col.querySelectorAll('.timeWheelItem')].find(b=>b.dataset.value===wanted[cls]);requestAnimationFrame(()=>centerButton(col,sel,false));let timer;col.addEventListener('scroll',()=>{const best=closestToCenter(col);if(best)col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===best));clearTimeout(timer);timer=setTimeout(()=>{const b=closestToCenter(col);if(b)centerButton(col,b,true)},80)},{passive:true});col.addEventListener('click',e=>{const b=e.target.closest('.timeWheelItem');if(b)centerButton(col,b,true)})});modal.addEventListener('click',e=>{if(e.target===modal||e.target.dataset.wheel==='cancel'){modal.remove();activeTimeInput=null;return}if(e.target.dataset.wheel==='save'&&activeTimeInput){const get=cls=>modal.querySelector('.'+cls+' .timeWheelItem.selected')?.dataset.value;let hh=Number(get('wheelHour')),mm=Number(get('wheelMinute')),period=get('wheelPeriod');if(period==='AM'&&hh===12)hh=0;if(period==='PM'&&hh!==12)hh+=12;activeTimeInput.value=pad2(hh)+':'+pad2(mm);activeTimeInput.dispatchEvent(new Event('input',{bubbles:true}));activeTimeInput.dispatchEvent(new Event('change',{bubbles:true}));modal.remove();activeTimeInput=null}})}document.addEventListener('pointerdown',e=>{const input=e.target.closest('input[type="time"]');if(input){e.preventDefault();e.stopPropagation();openWheel(input)}},true);document.addEventListener('keydown',e=>{const input=e.target.closest&&e.target.closest('input[type="time"]');if(input&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openWheel(input)}},true);window.openSimpleWheelTimePicker=openWheel})();
+(function(){
+let activeTimeInput=null;
+let openingInput=null;
+const ITEM_H=46,COL_H=230;
+function pad2(n){return String(n).padStart(2,'0')}
+function parse24(v){const m=/^(\d{1,2}):(\d{2})$/.exec(v||'');let h=m?Number(m[1]):9,min=m?Number(m[2]):0;h=Math.max(0,Math.min(23,h));min=Math.max(0,Math.min(59,min));return {h,min}}
+function makeCol(values,cls){return '<div class="timeWheelCol '+cls+'">'+values.map(v=>'<button type="button" class="timeWheelItem" data-value="'+v+'">'+v+'</button>').join('')+'</div>'}
+function markButton(col,btn){if(!btn)return;col.querySelectorAll('.timeWheelItem').forEach(x=>x.classList.toggle('selected',x===btn))}
+function centerButton(col,btn,smooth){if(!btn)return;markButton(col,btn);col.scrollTo({top:Math.max(0,btn.offsetTop-(COL_H-ITEM_H)/2),behavior:smooth?'smooth':'auto'});if(document.activeElement===btn)btn.blur()}
+function closestToCenter(col){const cr=col.getBoundingClientRect(),cy=cr.top+cr.height/2;let best=null,dist=Infinity;col.querySelectorAll('.timeWheelItem').forEach(b=>{const r=b.getBoundingClientRect(),d=Math.abs((r.top+r.height/2)-cy);if(d<dist){dist=d;best=b}});return best}
+function closeWheel(){const modal=document.getElementById('simpleWheelTimePicker');if(modal)modal.remove();activeTimeInput=null;openingInput=null}
+function openWheel(input){
+if(!input||input.disabled)return;
+const existing=document.getElementById('simpleWheelTimePicker');if(existing)existing.remove();
+activeTimeInput=input;openingInput=input;
+const t=parse24(input.value),ap=t.h>=12?'PM':'AM',hour=String((t.h%12)||12),hours=Array.from({length:12},(_,i)=>String(i+1)),mins=Array.from({length:60},(_,i)=>pad2(i));
+const html='<div class="timeWheelModal" id="simpleWheelTimePicker"><div class="timeWheelBox" role="dialog" aria-modal="true"><div class="timeWheelTitle">Select time</div><div class="timePickerHint">Scroll to choose hour, minute and AM/PM</div><div class="timeWheel"><div class="timeWheelMarker"></div>'+makeCol(hours,'wheelHour')+makeCol(mins,'wheelMinute')+makeCol(['AM','PM'],'wheelPeriod')+'</div><div class="timeWheelActions"><button type="button" class="btn outline" data-wheel="cancel">Cancel</button><button type="button" class="btn" data-wheel="save">Done</button></div></div></div>';
+document.body.insertAdjacentHTML('beforeend',html);
+const modal=document.getElementById('simpleWheelTimePicker'),wanted={wheelHour:hour,wheelMinute:pad2(t.min),wheelPeriod:ap};
+modal.querySelectorAll('.timeWheelCol').forEach(col=>{
+const cls=col.classList.contains('wheelHour')?'wheelHour':col.classList.contains('wheelMinute')?'wheelMinute':'wheelPeriod';
+const sel=[...col.querySelectorAll('.timeWheelItem')].find(b=>b.dataset.value===wanted[cls]);
+requestAnimationFrame(()=>centerButton(col,sel,false));
+let timer;
+col.addEventListener('scroll',()=>{
+const best=closestToCenter(col);if(best)markButton(col,best);
+clearTimeout(timer);
+ timer=setTimeout(()=>{const b=closestToCenter(col);if(b)markButton(col,b)},120);
+},{passive:true});
+col.addEventListener('click',e=>{
+const b=e.target.closest('.timeWheelItem');if(!b)return;
+e.preventDefault();e.stopPropagation();centerButton(col,b,true);
+});
+});
+modal.addEventListener('click',e=>{
+if(e.target===modal||e.target.dataset.wheel==='cancel'){e.preventDefault();e.stopPropagation();closeWheel();return}
+if(e.target.dataset.wheel==='save'&&activeTimeInput){
+e.preventDefault();e.stopPropagation();
+const get=cls=>modal.querySelector('.'+cls+' .timeWheelItem.selected')?.dataset.value;
+let hh=Number(get('wheelHour')),mm=Number(get('wheelMinute')),period=get('wheelPeriod');
+if(period==='AM'&&hh===12)hh=0;if(period==='PM'&&hh!==12)hh+=12;
+const target=activeTimeInput;target.value=pad2(hh)+':'+pad2(mm);target.dispatchEvent(new Event('input',{bubbles:true}));target.dispatchEvent(new Event('change',{bubbles:true}));closeWheel();
+}
+});
+}
+// Open only once for the actual tap, and suppress the synthetic click that Android sends
+// after pointerdown. This prevents the underlying time input/schedule row from receiving it.
+document.addEventListener('pointerdown',e=>{
+const input=e.target.closest&&e.target.closest('input[type="time"]');
+if(!input)return;
+e.preventDefault();e.stopPropagation();openWheel(input);
+},true);
+document.addEventListener('click',e=>{
+const input=e.target.closest&&e.target.closest('input[type="time"]');
+if(input&&openingInput===input){e.preventDefault();e.stopPropagation();return;}
+},true);
+document.addEventListener('keydown',e=>{
+const input=e.target.closest&&e.target.closest('input[type="time"]');
+if(input&&(e.key==='Enter'||e.key===' ')){e.preventDefault();e.stopPropagation();openWheel(input);}
+if(e.key==='Escape'&&document.getElementById('simpleWheelTimePicker')){e.preventDefault();closeWheel();}
+},true);
+window.openSimpleWheelTimePicker=openWheel;
+})();
 </script>
 </head>
 <body><div id="app"></div>
